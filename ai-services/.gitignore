@@ -1,7 +1,8 @@
 hosts.ini
 .devcontainer
 cron_logs
-
+ai-services/.model_cache/
+ai-services/cache/models
 .env*
 .pip
 dist

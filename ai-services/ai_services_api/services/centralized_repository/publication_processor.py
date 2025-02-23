@@ -288,6 +288,7 @@ class PublicationProcessor:
             # Add main publication record
             self.db.add_publication(
                 title=title,
+                doi=doi,  
                 summary=summary,
                 source=source,
                 type=content_type,

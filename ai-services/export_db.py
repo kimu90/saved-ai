@@ -21,7 +21,7 @@ def get_db_connection_params():
         'port': os.getenv('POSTGRES_PORT', '5432'),
         'dbname': os.getenv('POSTGRES_DB', 'aphrc'),
         'user': os.getenv('POSTGRES_USER', 'postgres'),
-        'password': os.getenv('POSTGRES_PASSWORD', 'postgres')
+        'password': os.getenv('POSTGRES_PASSWORD', 'p0stgres')
     }
 
 @contextmanager
