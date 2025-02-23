@@ -19,6 +19,7 @@ class MessageHandler:
     def clean_response_text(text: str) -> str:
         """
         Clean and format the response text to remove markdown formatting and make it more natural.
+        Converts DOI citations into clickable links with publication titles.
         
         Args:
             text (str): The input text with markdown formatting
@@ -43,40 +44,39 @@ class MessageHandler:
             bullet_list = ', '.join(point.strip() for point in bullet_points)
             if 'Key Findings:' in cleaned:
                 cleaned = cleaned.replace('Key Findings:', f'Key findings include: {bullet_list}.')
-                
-        # First, store title and DOI pairs
-        pattern = r'(.*?)\s*\(doi:\s*([^\)]+)\)'
-        matches = re.finditer(pattern, cleaned)
         
-        # Replace each match with title and full DOI URL
-        for match in matches:
-            title = match.group(1).strip()
-            doi = match.group(2).strip()
-            old_text = match.group(0)
-            new_text = f'{title} [https://doi.org/{doi}]'
-            cleaned = cleaned.replace(old_text, new_text)
+        # Handle DOI citations - transform into clickable links
+        # Look for patterns like "Study Title (DOI: https://doi.org/...)" or variations
+        doi_patterns = [
+            r'(.*?)\s*\(DOI:\s*https?://doi\.org/([^\)]+)\)',  # (DOI: https://doi.org/...)
+            r'(.*?)\s*\(doi:\s*([^\)]+)\)',                    # (doi: ...)
+            r'(.*?)\s*\(DOI:\s*([^\)]+)\)'                     # (DOI: ...)
+        ]
+        
+        for pattern in doi_patterns:
+            def replace_doi(match):
+                title = match.group(1).strip()
+                doi = match.group(2).strip()
+                # Remove spaces in DOI URL
+                doi = doi.replace(' ', '')
+                return f'<a href="https://doi.org/{doi}">{title}</a>'
+            
+            cleaned = re.sub(pattern, replace_doi, cleaned)
         
         # Clean up quotation marks
         cleaned = re.sub(r'\"([^\"]+)\"', r'\1', cleaned)
         
-        # Fix any remaining spacing issues
+        # Fix spacing issues
         cleaned = re.sub(r'\s+', ' ', cleaned)
         cleaned = re.sub(r'\s+([.,:])', r'\1', cleaned)
         cleaned = cleaned.strip()
         
         # Add proper spacing after periods
         cleaned = re.sub(r'\.(?! )', '. ', cleaned)
-        
-        # Fix spacing issues
-        cleaned = re.sub(r'\s+', ' ', cleaned)
-        cleaned = re.sub(r'\s+([.,:])', r'\1', cleaned)
         
         # Clean up any remaining special characters
         cleaned = cleaned.replace('\\n', ' ')
         cleaned = cleaned.strip()
-        
-        # Add proper spacing after periods
-        cleaned = re.sub(r'\.(?! )', '. ', cleaned)
         
         return cleaned
 
