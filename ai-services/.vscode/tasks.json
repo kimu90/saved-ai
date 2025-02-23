@@ -1,0 +1,50 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "docker-run: debug",
+        "type": "docker-run",
+        "dependsOn": [
+          "docker-build"
+        ],
+        "dockerRun": {
+          "image": "research-server:latest",
+          "env": {
+            "PYTHONUNBUFFERED": "1",
+            "LOG_LEVEL": "DEBUG",
+            "UVICORN_LOG_LEVEL": "debug"
+          },
+          "volumes": [
+            {
+              "containerPath": "/app",
+              "localPath": "${workspaceFolder}"
+            }
+          ],
+          "ports": [
+            {
+              "containerPort": 8000,
+              "hostPort": 8000
+            }
+          ]
+        },
+        "python": {
+          "module": "uvicorn",
+          "args": [
+            "app:app",
+            "--host", "0.0.0.0",
+            "--port", "8000",
+            "--reload"
+          ]
+        }
+      },
+      {
+        "label": "docker-build",
+        "type": "docker-build",
+        "dockerBuild": {
+          "context": "${workspaceFolder}",
+          "dockerfile": "${workspaceFolder}/Dockerfile",
+          "tag": "research-server:latest"
+        }
+      }
+    ]
+  }
