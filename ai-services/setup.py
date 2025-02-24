@@ -1,6 +1,7 @@
 """
 System initialization and database setup module.
 """
+import json
 import os
 import sys
 import logging

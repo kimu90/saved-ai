@@ -150,15 +150,18 @@ class TextSummarizer:
         Returns:
             Dict mapping identified fields to lists of common subfields
         """
+        # First truncate and prepare the publications data
+        publication_data = [{
+            'title': p.get('title', ''),
+            'abstract': p.get('abstract', '')[:200],  # Truncate abstract for prompt length
+            'domains': p.get('domains', [])
+        } for p in publications[:50]]  # Sample first 50 for analysis
+
         corpus_prompt = f"""
         Analyze this collection of {len(publications)} academic publications and identify natural groupings:
 
         Publications:
-        {json.dumps([{
-            'title': p.get('title', ''),
-            'abstract': p.get('abstract', '')[:200],  # Truncate for prompt length
-            'domains': p.get('domains', [])
-        } for p in publications[:50]], indent=2)}  # Sample for analysis
+        {json.dumps(publication_data, indent=2)}
 
         Task:
         1. Identify the major thematic fields that emerge from this content
