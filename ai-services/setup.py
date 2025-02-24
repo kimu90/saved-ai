@@ -161,9 +161,7 @@ class SystemInitializer:
     async def process_publications(self, summarizer: Optional[TextSummarizer] = None) -> None:
         """Process publications from all sources"""
         openalex_processor = OpenAlexProcessor()
-        publication_processor = PublicationProcessor(openalex_procesgit add .gitattributes
-git commit -m "Track large files with Git LFS"
-sor.db, TextSummarizer())
+        publication_processor = PublicationProcessor(openalex_processor.db, TextSummarizer())
         expert_processor = ExpertProcessor(openalex_processor.db, os.getenv('OPENALEX_API_URL'))
 
         try:
