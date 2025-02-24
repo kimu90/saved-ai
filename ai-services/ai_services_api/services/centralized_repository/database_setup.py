@@ -196,6 +196,8 @@ class SchemaManager:
                         publication_year INTEGER,
                         summary TEXT,
                         source VARCHAR(50) DEFAULT 'openalex',
+                        field VARCHAR(50),  -- Added field
+                        subfield VARCHAR(50),  -- Added subfield
                         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
                     )
                 """,

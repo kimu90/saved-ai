@@ -7,6 +7,7 @@ import logging
 import argparse
 import asyncio
 from dataclasses import dataclass
+import time
 from typing import Optional
 from dotenv import load_dotenv
 
@@ -23,6 +24,8 @@ from ai_services_api.services.centralized_repository.website.website_scraper imp
 from ai_services_api.services.centralized_repository.nexus.researchnexus_scraper import ResearchNexusScraper
 from ai_services_api.services.centralized_repository.openalex.expert_processor import ExpertProcessor
 from ai_services_api.services.centralized_repository.web_content.services.processor import WebContentProcessor  
+from ai_services_api.services.centralized_repository.database_manager import DatabaseManager
+
 
 
 # Configure logging
@@ -64,6 +67,7 @@ class SystemInitializer:
     """Handles system initialization and setup"""
     def __init__(self, config: SetupConfig):
         self.config = config
+        self.db = DatabaseManager()  # Add this line
         self.required_env_vars = [
             'DATABASE_URL',
             'NEO4J_URI',
@@ -248,8 +252,30 @@ class SystemInitializer:
                         logger.info(f"\nProcessing {len(website_publications)} website publications")
                         for pub in website_publications:
                             try:
+                                # First process the publication
                                 publication_processor.process_single_work(pub, source='website')
                                 logger.info(f"Successfully processed website publication: {pub.get('title', 'Unknown Title')}")
+                                
+                                # Then classify fields
+                                try:
+                                    field, subfield = website_scraper.summarizer.classify_field_and_subfield(
+                                        title=pub.get('title', ''),
+                                        abstract=pub.get('abstract', ''),
+                                        domains=pub.get('domains', [])
+                                    )
+                                    
+                                    # Update fields directly in database
+                                    website_scraper.db.execute("""
+                                        UPDATE resources_resource 
+                                        SET field = %s, subfield = %s
+                                        WHERE title = %s AND source = 'website'
+                                    """, (field, subfield, pub.get('title')))
+                                    
+                                    logger.info(f"Classified {pub.get('title')}: {field}/{subfield}")
+                                except Exception as e:
+                                    logger.error(f"Error in field classification: {e}")
+                                    continue
+                                    
                             except Exception as e:
                                 logger.error(f"Error processing website publication: {e}")
                                 continue
@@ -349,6 +375,8 @@ class SystemInitializer:
                 openalex_processor = OpenAlexProcessor()
                 expert_processor = ExpertProcessor(openalex_processor.db, os.getenv('OPENALEX_API_URL'))
                 try:
+                    # Process expert fields
+                    expert_processor.process_expert_fields()
                     logger.info("Expert fields processing complete!")
                 except Exception as e:
                     logger.error(f"Error processing expert fields: {e}")
@@ -356,9 +384,47 @@ class SystemInitializer:
                     expert_processor.close()
                     openalex_processor.close()
             
+            # Initialize the text summarizer once for reuse
+            summarizer = TextSummarizer()
+            
             if not self.config.skip_publications:
-                await self.process_publications()
+                await self.process_publications(summarizer)
                 
+                # After processing publications, classify unclassified content
+                try:
+                    logger.info("Starting field classification for unclassified content...")
+                    # Get unclassified resources
+                    results = self.db.execute("""
+                        SELECT id, title, summary, domains 
+                        FROM resources_resource 
+                        WHERE field IS NULL OR subfield IS NULL
+                    """)
+                    
+                    if results:
+                        for row in results:
+                            try:
+                                field, subfield = summarizer.classify_field_and_subfield(
+                                    title=row[1],
+                                    abstract=row[2] or "",
+                                    domains=row[3] if row[3] else []
+                                )
+                                
+                                # Update the resource with field classification
+                                self.db.execute("""
+                                    UPDATE resources_resource 
+                                    SET field = %s, subfield = %s
+                                    WHERE id = %s
+                                """, (field, subfield, row[0]))
+                                
+                                logger.info(f"Classified resource {row[1]}: {field}/{subfield}")
+                            except Exception as e:
+                                logger.error(f"Error classifying resource {row[1]}: {e}")
+                                continue
+                    
+                    logger.info("Field classification complete!")
+                except Exception as e:
+                    logger.error(f"Error in field classification process: {e}")
+            
             if not self.config.skip_graph:
                 graph_success = await self.initialize_graph()
                 if not graph_success:
@@ -372,15 +438,44 @@ class SystemInitializer:
 
             # Process web content
             if not self.config.skip_scraping:
-                from ai_services_api.services.centralized_repository.web_content.services.processor import WebContentProcessor
                 web_processor = WebContentProcessor(
                     max_workers=self.config.max_workers,
                 )
                 await web_processor.process_content()
-
-         
-            
                 
+                # Classify any new web content
+                try:
+                    logger.info("Classifying new web content...")
+                    results = self.db.execute("""
+                        SELECT id, title, summary, domains 
+                        FROM resources_resource 
+                        WHERE source = 'web' AND (field IS NULL OR subfield IS NULL)
+                    """)
+                    
+                    if results:
+                        for row in results:
+                            try:
+                                field, subfield = summarizer.classify_field_and_subfield(
+                                    title=row[1],
+                                    abstract=row[2] or "",
+                                    domains=row[3] if row[3] else []
+                                )
+                                
+                                self.db.execute("""
+                                    UPDATE resources_resource 
+                                    SET field = %s, subfield = %s
+                                    WHERE id = %s
+                                """, (field, subfield, row[0]))
+                                
+                                logger.info(f"Classified web content {row[1]}: {field}/{subfield}")
+                            except Exception as e:
+                                logger.error(f"Error classifying web content {row[1]}: {e}")
+                                continue
+                                
+                    logger.info("Web content classification complete!")
+                except Exception as e:
+                    logger.error(f"Error in web content classification: {e}")
+            
             logger.info("System initialization completed successfully!")
                 
         except Exception as e:

@@ -1,0 +1,753 @@
+api-1  | tee: /code/logs/init.log: Permission denied
+api-1  | [Mon Feb 24 09:32:43 UTC 2025] Starting initialization...
+api-1  | [Mon Feb 24 09:32:43 UTC 2025] Waiting for PostgreSQL...
+api-1  | [Mon Feb 24 09:32:43 UTC 2025] PostgreSQL is available
+api-1  | [Mon Feb 24 09:32:43 UTC 2025] Waiting for Redis...
+api-1  | [Mon Feb 24 09:32:43 UTC 2025] Redis is available
+api-1  | [Mon Feb 24 09:32:43 UTC 2025] Waiting for Neo4j...
+api-1  | [Mon Feb 24 09:32:43 UTC 2025] Neo4j is available
+api-1  | [Mon Feb 24 09:32:43 UTC 2025] Running setup with args: 
+api-1  | 2025-02-24 09:32:52 - INFO: Loading faiss with AVX2 support.
+api-1  | 2025-02-24 09:32:52 - INFO: Successfully loaded faiss with AVX2 support.
+api-1  | /usr/local/lib/python3.11/site-packages/transformers/utils/hub.py:106: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+api-1  |   warnings.warn(
+api-1  | 2025-02-24 09:33:01 - INFO: Initializing database...
+api-1  | 2025-02-24 09:33:01 - INFO: Connected to database: aphrc at postgres
+api-1  | 2025-02-24 09:33:01 - INFO: Database aphrc already exists
+api-1  | 2025-02-24 09:33:01 - INFO: Database connection closed
+api-1  | 2025-02-24 09:33:01 - INFO: Connected to database: aphrc at postgres
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: chat_sessions
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: chat_interactions
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: sentiment_metrics
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: chat_analytics
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: content_webpage
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: content_pdf
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: resources_resource
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: content_hashes
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: content_embeddings
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: experts_expert
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: expert_resource_links
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: chatbot_logs
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: search_sessions
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: search_analytics
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: expert_search_matches
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: user_recommendations
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: expert_interactions
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: expert_messages
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: query_predictions
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: expert_matching_logs
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: domain_expertise_analytics
+api-1  | 2025-02-24 09:33:01 - INFO: Created table: interactions
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created index successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Created view: intent_performance_metrics
+api-1  | 2025-02-24 09:33:01 - INFO: Created view: sentiment_analysis_metrics
+api-1  | 2025-02-24 09:33:01 - INFO: Created view: content_matching_metrics
+api-1  | 2025-02-24 09:33:01 - INFO: Created view: daily_search_metrics
+api-1  | 2025-02-24 09:33:01 - INFO: Created view: expert_interaction_metrics
+api-1  | 2025-02-24 09:33:01 - INFO: Created view: domain_expertise_ranking
+api-1  | 2025-02-24 09:33:01 - INFO: Created view: expert_matching_performance
+api-1  | 2025-02-24 09:33:01 - INFO: Created view: expert_publications
+api-1  | 2025-02-24 09:33:01 - WARNING: View creation warning: column esm.clicked does not exist
+api-1  | LINE 8:                     SUM(CASE WHEN esm.clicked THEN 1 ELSE 0 ...
+api-1  |                                           ^
+api-1  | 
+api-1  | 2025-02-24 09:33:01 - INFO: Created view: domain_performance_metrics
+api-1  | 2025-02-24 09:33:01 - INFO: Created view: session_analytics
+api-1  | 2025-02-24 09:33:01 - INFO: Created view: query_patterns
+api-1  | 2025-02-24 09:33:01 - INFO: Schema initialization completed successfully
+api-1  | 2025-02-24 09:33:01 - INFO: Database connection closed
+api-1  | 2025-02-24 09:33:01 - INFO: Database initialization complete!
+api-1  | 2025-02-24 09:33:01 - INFO: Loading experts from experts.csv...
+api-1  | 2025-02-24 09:33:01 - INFO: Connected to database: aphrc at postgres
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Anthony Ajayi (ID: 1)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Beatrice Maina (ID: 2)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Caroline Kabiru (ID: 3)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Emmy Igonya (ID: 4)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Estelle Sidze (ID: 5)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Kenneth Juma (ID: 6)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Yohannes Wado (ID: 7)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Bonnie Wandera (ID: 8)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Amanuel Abajobir (ID: 9)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Ramatou Ouedraogo (ID: 10)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Moses Ngware (ID: 11)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Patricia Kitsao (ID: 12)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Lucy Wakiaga (ID: 13)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Lydia Namatende (ID: 14)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Margaret Nampijja (ID: 15)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Amani Karisa (ID: 16)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Silas Onyango (ID: 17)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Benta Abuya (ID: 18)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Agnes Kiragga (ID: 19)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Daniel Mwanga (ID: 20)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Samuel Iddi (ID: 21)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Steve Cygu (ID: 22)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Peterrock Muriuki (ID: 23)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Mercy Ndwiga (ID: 24)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Naomi Njenga (ID: 25)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Julius Sindi (ID: 26)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Lisa Omondi (ID: 27)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Rita Karoki (ID: 28)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Alypio Nyandwi (ID: 29)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Caven Kithinji (ID: 30)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Benard Ondiek (ID: 31)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Hesborn Wao (ID: 32)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Marta Vicente-Crespo (ID: 33)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Florah Karimi (ID: 34)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Patrick Owili (ID: 35)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Juliet Ratemo (ID: 36)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Isabel Radoli (ID: 37)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Michelle Mbuthia (ID: 38)
+api-1  | 2025-02-24 09:33:01 - INFO: Processed expert: Nicholas Etyang (ID: 39)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Abdhalah Ziraba (ID: 40)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Frederick Wekesah (ID: 41)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Elizabeth Kemigisha (ID: 42)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Richard Sanya (ID: 43)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Gershim Asiki (ID: 44)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Shukri Mohamed (ID: 45)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Peter Otieno (ID: 46)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Veronica Ojiambo (ID: 47)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Elizabeth Kimani (ID: 48)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Calistus Wilunda (ID: 49)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Bonventure Mwangi (ID: 50)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Milka Wanjohi (ID: 51)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: David Osogo (ID: 52)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Antonina Mutoro (ID: 53)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Jacqueline Kungú (ID: 54)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Alice Karanja (ID: 55)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Dickson Amugsi (ID: 56)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Blessing Mberu (ID: 57)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Caroline Kabaria (ID: 58)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Gloria Lang'at (ID: 59)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Razak Gyasi (ID: 60)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Kanyiva Muindi (ID: 61)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Sheillah Simiyu (ID: 62)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Innocent Tumwebaze (ID: 63)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Grace Kibunja (ID: 64)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Jane Mangwana (ID: 65)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Lynette Kamau (ID: 66)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Alex Manyasi (ID: 67)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Christopher Maero (ID: 68)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Mohammed Duba (ID: 69)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Issabelah Mutuku (ID: 70)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Johnstone Kotut (ID: 71)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Corretta Tira (ID: 72)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Sheena Kayira (ID: 73)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Winnie Chepkemoi (ID: 74)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Pauline Ochieng (ID: 75)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Cliff Mokua (ID: 76)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Joy Maruti (ID: 77)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Bethsheba Getanda (ID: 78)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Joshua Muthama (ID: 79)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: George Gachanga (ID: 80)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Phylis Mungai (ID: 81)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Ivy Nyarango (ID: 82)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Patrick Kiriri (ID: 83)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Meshack Johnson (ID: 84)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Evans Simiyu (ID: 85)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Billy Lubuya (ID: 86)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Sylvia Kimingi (ID: 87)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Annaline Karan (ID: 88)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Nancy Kang'ethe (ID: 89)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Joseph Kanyugo (ID: 90)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Lillian Okoth (ID: 91)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Janet Ayimba (ID: 92)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Monica Njonge (ID: 93)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Lillian Osano (ID: 94)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Cheikh Faye (ID: 95)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Diama Diop Dia (ID: 96)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Assane Diouf (ID: 97)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Adero Godfrey (ID: 98)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Anne Njeri (ID: 99)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Martin Mutua (ID: 100)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Sokhna Thiam (ID: 101)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Moustapha Tall (ID: 102)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Eubert Espira (ID: 103)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Arsene Sandie (ID: 104)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: El Hadji Malick Sylla (ID: 105)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Rodrigue Nda'chi Deffo (ID: 106)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Bernard Sabiti (ID: 107)
+api-1  | 2025-02-24 09:33:02 - INFO: Processed expert: Rornald Kananura Muhumuza (ID: 108)
+api-1  | 2025-02-24 09:33:02 - INFO: Expert CSV Processing Summary:
+api-1  |   Total experts in CSV:   108
+api-1  |   Successfully processed: 108
+api-1  |   Failed to process:      0
+api-1  | 2025-02-24 09:33:02 - INFO: Database connection closed
+api-1  | 2025-02-24 09:33:02 - INFO: Initial experts loaded successfully!
+api-1  | 2025-02-24 09:33:02 - INFO: Starting expert fields processing...
+api-1  | 2025-02-24 09:33:02 - INFO: OpenAlexProcessor initialized
+api-1  | 2025-02-24 09:33:02 - ERROR: Error processing expert fields: 'ExpertProcessor' object has no attribute 'process_expert_fields'
+api-1  | 2025-02-24 09:33:02 - INFO: Database connection closed
+api-1  | 2025-02-24 09:33:02 - INFO: Database connection closed
+api-1  | 2025-02-24 09:33:02 - INFO: Resources cleaned up
+api-1  | 2025-02-24 09:33:02 - INFO: Gemini model setup completed
+api-1  | 2025-02-24 09:33:02 - INFO: TextSummarizer initialized successfully
+api-1  | 2025-02-24 09:33:02 - INFO: OpenAlexProcessor initialized
+api-1  | 2025-02-24 09:33:02 - INFO: Gemini model setup completed
+api-1  | 2025-02-24 09:33:02 - INFO: TextSummarizer initialized successfully
+api-1  | 2025-02-24 09:33:02 - INFO: Database tables and indexes verified/created successfully
+api-1  | 2025-02-24 09:33:02 - INFO: Updating experts with OpenAlex data...
+api-1  | 2025-02-24 09:33:02 - INFO: Found 108 experts to update
+api-1  | 2025-02-24 09:33:07 - INFO: Updated fields for Emmy Igonya
+api-1  | 2025-02-24 09:33:07 - INFO: Updated expert: Emmy Igonya
+api-1  | 2025-02-24 09:33:07 - INFO: Updated fields for Beatrice Maina
+api-1  | 2025-02-24 09:33:07 - INFO: Updated expert: Beatrice Maina
+api-1  | 2025-02-24 09:33:07 - INFO: Updated fields for Estelle Sidze
+api-1  | 2025-02-24 09:33:07 - INFO: Updated expert: Estelle Sidze
+api-1  | 2025-02-24 09:33:07 - INFO: Updated fields for Anthony Ajayi
+api-1  | 2025-02-24 09:33:07 - INFO: Updated expert: Anthony Ajayi
+api-1  | 2025-02-24 09:33:07 - INFO: Updated fields for Caroline Kabiru
+api-1  | 2025-02-24 09:33:07 - INFO: Updated expert: Caroline Kabiru
+api-1  | 2025-02-24 09:33:12 - INFO: Updated fields for Kenneth Juma
+api-1  | 2025-02-24 09:33:12 - INFO: Updated expert: Kenneth Juma
+api-1  | 2025-02-24 09:33:12 - INFO: Updated fields for Yohannes Wado
+api-1  | 2025-02-24 09:33:12 - INFO: Updated expert: Yohannes Wado
+api-1  | 2025-02-24 09:33:12 - INFO: Updated fields for Bonnie Wandera
+api-1  | 2025-02-24 09:33:12 - INFO: Updated expert: Bonnie Wandera
+api-1  | 2025-02-24 09:33:13 - INFO: Updated fields for Amanuel Abajobir
+api-1  | 2025-02-24 09:33:13 - INFO: Updated expert: Amanuel Abajobir
+api-1  | 2025-02-24 09:33:13 - INFO: Updated fields for Ramatou Ouedraogo
+api-1  | 2025-02-24 09:33:13 - INFO: Updated expert: Ramatou Ouedraogo
+api-1  | 2025-02-24 09:33:18 - INFO: Updated fields for Moses Ngware
+api-1  | 2025-02-24 09:33:18 - INFO: Updated expert: Moses Ngware
+api-1  | 2025-02-24 09:33:18 - INFO: Updated fields for Patricia Kitsao
+api-1  | 2025-02-24 09:33:18 - INFO: Updated expert: Patricia Kitsao
+api-1  | 2025-02-24 09:33:18 - INFO: Updated fields for Lucy Wakiaga
+api-1  | 2025-02-24 09:33:18 - INFO: Updated expert: Lucy Wakiaga
+api-1  | 2025-02-24 09:33:18 - INFO: Updated fields for Lydia Namatende
+api-1  | 2025-02-24 09:33:18 - INFO: Updated expert: Lydia Namatende
+api-1  | 2025-02-24 09:33:19 - INFO: Updated fields for Margaret Nampijja
+api-1  | 2025-02-24 09:33:19 - INFO: Updated expert: Margaret Nampijja
+api-1  | 2025-02-24 09:33:24 - INFO: Updated fields for Amani Karisa
+api-1  | 2025-02-24 09:33:24 - INFO: Updated expert: Amani Karisa
+api-1  | 2025-02-24 09:33:24 - INFO: Updated fields for Silas Onyango
+api-1  | 2025-02-24 09:33:24 - INFO: Updated expert: Silas Onyango
+api-1  | 2025-02-24 09:33:24 - INFO: Updated fields for Benta Abuya
+api-1  | 2025-02-24 09:33:24 - INFO: Updated expert: Benta Abuya
+api-1  | 2025-02-24 09:33:25 - INFO: Updated fields for Agnes Kiragga
+api-1  | 2025-02-24 09:33:25 - INFO: Updated expert: Agnes Kiragga
+api-1  | 2025-02-24 09:33:25 - INFO: Updated fields for Daniel Mwanga
+api-1  | 2025-02-24 09:33:25 - INFO: Updated expert: Daniel Mwanga
+api-1  | 2025-02-24 09:33:30 - INFO: Updated fields for Samuel Iddi
+api-1  | 2025-02-24 09:33:30 - INFO: Updated expert: Samuel Iddi
+api-1  | 2025-02-24 09:33:30 - INFO: Updated fields for Steve Cygu
+api-1  | 2025-02-24 09:33:30 - INFO: Updated expert: Steve Cygu
+api-1  | 2025-02-24 09:33:30 - INFO: Updated fields for Peterrock Muriuki
+api-1  | 2025-02-24 09:33:30 - INFO: Updated expert: Peterrock Muriuki
+api-1  | 2025-02-24 09:33:30 - INFO: Updated fields for Mercy Ndwiga
+api-1  | 2025-02-24 09:33:30 - INFO: Updated expert: Mercy Ndwiga
+api-1  | 2025-02-24 09:33:31 - INFO: Updated fields for Naomi Njenga
+api-1  | 2025-02-24 09:33:31 - INFO: Updated expert: Naomi Njenga
+api-1  | 2025-02-24 09:33:35 - WARNING: No OpenAlex ID found for Lisa Omondi
+api-1  | 2025-02-24 09:33:35 - WARNING: Failed to update expert: Lisa Omondi
+api-1  | 2025-02-24 09:33:38 - WARNING: No OpenAlex ID found for Caven Kithinji
+api-1  | 2025-02-24 09:33:38 - WARNING: Failed to update expert: Caven Kithinji
+api-1  | 2025-02-24 09:33:38 - INFO: Updated fields for Julius Sindi
+api-1  | 2025-02-24 09:33:38 - INFO: Updated expert: Julius Sindi
+api-1  | 2025-02-24 09:33:38 - INFO: Updated fields for Rita Karoki
+api-1  | 2025-02-24 09:33:38 - INFO: Updated expert: Rita Karoki
+api-1  | 2025-02-24 09:33:38 - INFO: Updated fields for Alypio Nyandwi
+api-1  | 2025-02-24 09:33:38 - INFO: Updated expert: Alypio Nyandwi
+api-1  | 2025-02-24 09:33:43 - INFO: Updated fields for Benard Ondiek
+api-1  | 2025-02-24 09:33:43 - INFO: Updated expert: Benard Ondiek
+api-1  | 2025-02-24 09:33:43 - INFO: Updated fields for Hesborn Wao
+api-1  | 2025-02-24 09:33:43 - INFO: Updated expert: Hesborn Wao
+api-1  | 2025-02-24 09:33:43 - INFO: Updated fields for Marta Vicente-Crespo
+api-1  | 2025-02-24 09:33:43 - INFO: Updated expert: Marta Vicente-Crespo
+api-1  | 2025-02-24 09:33:43 - INFO: Updated fields for Lynette Kamau
+api-1  | 2025-02-24 09:33:43 - INFO: Updated expert: Lynette Kamau
+api-1  | 2025-02-24 09:33:44 - INFO: Updated fields for Florah Karimi
+api-1  | 2025-02-24 09:33:44 - INFO: Updated expert: Florah Karimi
+api-1  | 2025-02-24 09:33:48 - WARNING: No OpenAlex ID found for Juliet Ratemo
+api-1  | 2025-02-24 09:33:48 - WARNING: Failed to update expert: Juliet Ratemo
+api-1  | 2025-02-24 09:33:50 - WARNING: No OpenAlex ID found for Isabel Radoli
+api-1  | 2025-02-24 09:33:50 - WARNING: Failed to update expert: Isabel Radoli
+api-1  | 2025-02-24 09:33:52 - WARNING: No OpenAlex ID found for Nicholas Etyang
+api-1  | 2025-02-24 09:33:52 - WARNING: Failed to update expert: Nicholas Etyang
+api-1  | 2025-02-24 09:33:52 - INFO: Updated fields for Patrick Owili
+api-1  | 2025-02-24 09:33:52 - INFO: Updated expert: Patrick Owili
+api-1  | 2025-02-24 09:33:52 - INFO: Updated fields for Michelle Mbuthia
+api-1  | 2025-02-24 09:33:52 - INFO: Updated expert: Michelle Mbuthia
+api-1  | 2025-02-24 09:33:58 - INFO: Updated fields for Abdhalah Ziraba
+api-1  | 2025-02-24 09:33:58 - INFO: Updated expert: Abdhalah Ziraba
+api-1  | 2025-02-24 09:33:58 - INFO: Updated fields for Frederick Wekesah
+api-1  | 2025-02-24 09:33:58 - INFO: Updated expert: Frederick Wekesah
+api-1  | 2025-02-24 09:33:58 - INFO: Updated fields for Elizabeth Kemigisha
+api-1  | 2025-02-24 09:33:58 - INFO: Updated expert: Elizabeth Kemigisha
+api-1  | 2025-02-24 09:33:58 - INFO: Updated fields for Richard Sanya
+api-1  | 2025-02-24 09:33:58 - INFO: Updated expert: Richard Sanya
+api-1  | 2025-02-24 09:33:59 - INFO: Updated fields for Gershim Asiki
+api-1  | 2025-02-24 09:33:59 - INFO: Updated expert: Gershim Asiki
+api-1  | 2025-02-24 09:34:04 - INFO: Updated fields for Shukri Mohamed
+api-1  | 2025-02-24 09:34:04 - INFO: Updated expert: Shukri Mohamed
+api-1  | 2025-02-24 09:34:04 - INFO: Updated fields for Peter Otieno
+api-1  | 2025-02-24 09:34:04 - INFO: Updated expert: Peter Otieno
+api-1  | 2025-02-24 09:34:04 - INFO: Updated fields for Veronica Ojiambo
+api-1  | 2025-02-24 09:34:04 - INFO: Updated expert: Veronica Ojiambo
+api-1  | 2025-02-24 09:34:05 - INFO: Updated fields for Elizabeth Kimani
+api-1  | 2025-02-24 09:34:05 - INFO: Updated expert: Elizabeth Kimani
+api-1  | 2025-02-24 09:34:05 - INFO: Updated fields for Calistus Wilunda
+api-1  | 2025-02-24 09:34:05 - INFO: Updated expert: Calistus Wilunda
+api-1  | 2025-02-24 09:34:11 - WARNING: No OpenAlex ID found for Jacqueline Kungú
+api-1  | 2025-02-24 09:34:11 - WARNING: Failed to update expert: Jacqueline Kungú
+api-1  | 2025-02-24 09:34:11 - INFO: Updated fields for Bonventure Mwangi
+api-1  | 2025-02-24 09:34:11 - INFO: Updated expert: Bonventure Mwangi
+api-1  | 2025-02-24 09:34:11 - INFO: Updated fields for Milka Wanjohi
+api-1  | 2025-02-24 09:34:11 - INFO: Updated expert: Milka Wanjohi
+api-1  | 2025-02-24 09:34:11 - INFO: Updated fields for David Osogo
+api-1  | 2025-02-24 09:34:11 - INFO: Updated expert: David Osogo
+api-1  | 2025-02-24 09:34:11 - INFO: Updated fields for Antonina Mutoro
+api-1  | 2025-02-24 09:34:11 - INFO: Updated expert: Antonina Mutoro
+api-1  | 2025-02-24 09:34:18 - WARNING: No OpenAlex ID found for Gloria Lang'at
+api-1  | 2025-02-24 09:34:18 - WARNING: Failed to update expert: Gloria Lang'at
+api-1  | 2025-02-24 09:34:18 - INFO: Updated fields for Alice Karanja
+api-1  | 2025-02-24 09:34:18 - INFO: Updated expert: Alice Karanja
+api-1  | 2025-02-24 09:34:18 - INFO: Updated fields for Blessing Mberu
+api-1  | 2025-02-24 09:34:18 - INFO: Updated expert: Blessing Mberu
+api-1  | 2025-02-24 09:34:18 - INFO: Updated fields for Caroline Kabaria
+api-1  | 2025-02-24 09:34:18 - INFO: Updated expert: Caroline Kabaria
+api-1  | 2025-02-24 09:34:18 - INFO: Updated fields for Dickson Amugsi
+api-1  | 2025-02-24 09:34:18 - INFO: Updated expert: Dickson Amugsi
+api-1  | 2025-02-24 09:34:23 - INFO: Updated fields for Razak Gyasi
+api-1  | 2025-02-24 09:34:23 - INFO: Updated expert: Razak Gyasi
+api-1  | 2025-02-24 09:34:23 - INFO: Updated fields for Kanyiva Muindi
+api-1  | 2025-02-24 09:34:23 - INFO: Updated expert: Kanyiva Muindi
+api-1  | 2025-02-24 09:34:23 - INFO: Updated fields for Sheillah Simiyu
+api-1  | 2025-02-24 09:34:23 - INFO: Updated expert: Sheillah Simiyu
+api-1  | 2025-02-24 09:34:23 - INFO: Updated fields for Innocent Tumwebaze
+api-1  | 2025-02-24 09:34:23 - INFO: Updated expert: Innocent Tumwebaze
+api-1  | 2025-02-24 09:34:23 - INFO: Updated fields for Grace Kibunja
+api-1  | 2025-02-24 09:34:23 - INFO: Updated expert: Grace Kibunja
+api-1  | 2025-02-24 09:34:27 - WARNING: No OpenAlex ID found for Alex Manyasi
+api-1  | 2025-02-24 09:34:27 - WARNING: Failed to update expert: Alex Manyasi
+api-1  | 2025-02-24 09:34:29 - WARNING: No OpenAlex ID found for Christopher Maero
+api-1  | 2025-02-24 09:34:29 - WARNING: Failed to update expert: Christopher Maero
+api-1  | 2025-02-24 09:34:31 - WARNING: No OpenAlex ID found for Mohammed Duba
+api-1  | 2025-02-24 09:34:31 - WARNING: Failed to update expert: Mohammed Duba
+api-1  | 2025-02-24 09:34:33 - WARNING: No OpenAlex ID found for Issabelah Mutuku
+api-1  | 2025-02-24 09:34:33 - WARNING: Failed to update expert: Issabelah Mutuku
+api-1  | 2025-02-24 09:34:33 - INFO: Updated fields for Jane Mangwana
+api-1  | 2025-02-24 09:34:33 - INFO: Updated expert: Jane Mangwana
+api-1  | 2025-02-24 09:34:37 - WARNING: No OpenAlex ID found for Corretta Tira
+api-1  | 2025-02-24 09:34:37 - WARNING: Failed to update expert: Corretta Tira
+api-1  | 2025-02-24 09:34:39 - WARNING: No OpenAlex ID found for Sheena Kayira
+api-1  | 2025-02-24 09:34:39 - WARNING: Failed to update expert: Sheena Kayira
+api-1  | 2025-02-24 09:34:40 - INFO: Updated fields for Johnstone Kotut
+api-1  | 2025-02-24 09:34:40 - INFO: Updated expert: Johnstone Kotut
+api-1  | 2025-02-24 09:34:40 - INFO: Updated fields for Winnie Chepkemoi
+api-1  | 2025-02-24 09:34:40 - INFO: Updated expert: Winnie Chepkemoi
+api-1  | 2025-02-24 09:34:41 - INFO: Updated fields for Pauline Ochieng
+api-1  | 2025-02-24 09:34:41 - INFO: Updated expert: Pauline Ochieng
+api-1  | 2025-02-24 09:34:46 - WARNING: No OpenAlex ID found for Joy Maruti
+api-1  | 2025-02-24 09:34:46 - WARNING: Failed to update expert: Joy Maruti
+api-1  | 2025-02-24 09:34:47 - WARNING: No OpenAlex ID found for Bethsheba Getanda
+api-1  | 2025-02-24 09:34:47 - WARNING: Failed to update expert: Bethsheba Getanda
+api-1  | 2025-02-24 09:34:49 - WARNING: No OpenAlex ID found for Joshua Muthama
+api-1  | 2025-02-24 09:34:49 - WARNING: Failed to update expert: Joshua Muthama
+api-1  | 2025-02-24 09:34:51 - WARNING: No OpenAlex ID found for George Gachanga
+api-1  | 2025-02-24 09:34:51 - WARNING: Failed to update expert: George Gachanga
+api-1  | 2025-02-24 09:34:51 - INFO: Updated fields for Cliff Mokua
+api-1  | 2025-02-24 09:34:51 - INFO: Updated expert: Cliff Mokua
+api-1  | 2025-02-24 09:34:55 - WARNING: No OpenAlex ID found for Phylis Mungai
+api-1  | 2025-02-24 09:34:55 - WARNING: Failed to update expert: Phylis Mungai
+api-1  | 2025-02-24 09:34:57 - WARNING: No OpenAlex ID found for Ivy Nyarango
+api-1  | 2025-02-24 09:34:57 - WARNING: Failed to update expert: Ivy Nyarango
+api-1  | 2025-02-24 09:34:58 - WARNING: No OpenAlex ID found for Patrick Kiriri
+api-1  | 2025-02-24 09:34:58 - WARNING: Failed to update expert: Patrick Kiriri
+api-1  | 2025-02-24 09:35:00 - WARNING: No OpenAlex ID found for Meshack Johnson
+api-1  | 2025-02-24 09:35:00 - WARNING: Failed to update expert: Meshack Johnson
+api-1  | 2025-02-24 09:35:01 - INFO: Updated fields for Evans Simiyu
+api-1  | 2025-02-24 09:35:01 - INFO: Updated expert: Evans Simiyu
+api-1  | 2025-02-24 09:35:05 - WARNING: No OpenAlex ID found for Billy Lubuya
+api-1  | 2025-02-24 09:35:05 - WARNING: Failed to update expert: Billy Lubuya
+api-1  | 2025-02-24 09:35:07 - WARNING: No OpenAlex ID found for Annaline Karan
+api-1  | 2025-02-24 09:35:07 - WARNING: Failed to update expert: Annaline Karan
+api-1  | 2025-02-24 09:35:10 - WARNING: No OpenAlex ID found for Joseph Kanyugo
+api-1  | 2025-02-24 09:35:10 - WARNING: Failed to update expert: Joseph Kanyugo
+api-1  | 2025-02-24 09:35:10 - INFO: Updated fields for Sylvia Kimingi
+api-1  | 2025-02-24 09:35:10 - INFO: Updated expert: Sylvia Kimingi
+api-1  | 2025-02-24 09:35:10 - INFO: Updated fields for Nancy Kang'ethe
+api-1  | 2025-02-24 09:35:10 - INFO: Updated expert: Nancy Kang'ethe
+api-1  | 2025-02-24 09:35:15 - WARNING: No OpenAlex ID found for Janet Ayimba
+api-1  | 2025-02-24 09:35:15 - WARNING: Failed to update expert: Janet Ayimba
+api-1  | 2025-02-24 09:35:17 - WARNING: No OpenAlex ID found for Monica Njonge
+api-1  | 2025-02-24 09:35:17 - WARNING: Failed to update expert: Monica Njonge
+api-1  | 2025-02-24 09:35:19 - WARNING: No OpenAlex ID found for Lillian Osano
+api-1  | 2025-02-24 09:35:19 - WARNING: Failed to update expert: Lillian Osano
+api-1  | 2025-02-24 09:35:19 - INFO: Updated fields for Lillian Okoth
+api-1  | 2025-02-24 09:35:19 - INFO: Updated expert: Lillian Okoth
+api-1  | 2025-02-24 09:35:20 - INFO: Updated fields for Cheikh Faye
+api-1  | 2025-02-24 09:35:20 - INFO: Updated expert: Cheikh Faye
+api-1  | 2025-02-24 09:35:24 - WARNING: No OpenAlex ID found for Diama Diop Dia
+api-1  | 2025-02-24 09:35:24 - WARNING: Failed to update expert: Diama Diop Dia
+api-1  | 2025-02-24 09:35:26 - INFO: Updated fields for Assane Diouf
+api-1  | 2025-02-24 09:35:26 - INFO: Updated expert: Assane Diouf
+api-1  | 2025-02-24 09:35:26 - INFO: Updated fields for Adero Godfrey
+api-1  | 2025-02-24 09:35:26 - INFO: Updated expert: Adero Godfrey
+api-1  | 2025-02-24 09:35:27 - INFO: Updated fields for Anne Njeri
+api-1  | 2025-02-24 09:35:27 - INFO: Updated expert: Anne Njeri
+api-1  | 2025-02-24 09:35:28 - INFO: Updated fields for Martin Mutua
+api-1  | 2025-02-24 09:35:28 - INFO: Updated expert: Martin Mutua
+api-1  | 2025-02-24 09:35:33 - WARNING: No OpenAlex ID found for Eubert Espira
+api-1  | 2025-02-24 09:35:33 - WARNING: Failed to update expert: Eubert Espira
+api-1  | 2025-02-24 09:35:34 - INFO: Updated fields for Sokhna Thiam
+api-1  | 2025-02-24 09:35:34 - INFO: Updated expert: Sokhna Thiam
+api-1  | 2025-02-24 09:35:34 - INFO: Updated fields for Moustapha Tall
+api-1  | 2025-02-24 09:35:34 - INFO: Updated expert: Moustapha Tall
+api-1  | 2025-02-24 09:35:34 - INFO: Updated fields for Arsene Sandie
+api-1  | 2025-02-24 09:35:34 - INFO: Updated expert: Arsene Sandie
+api-1  | 2025-02-24 09:35:34 - INFO: Updated fields for El Hadji Malick Sylla
+api-1  | 2025-02-24 09:35:34 - INFO: Updated expert: El Hadji Malick Sylla
+api-1  | 2025-02-24 09:35:38 - INFO: Updated fields for Rodrigue Nda'chi Deffo
+api-1  | 2025-02-24 09:35:38 - INFO: Updated expert: Rodrigue Nda'chi Deffo
+api-1  | 2025-02-24 09:35:38 - INFO: Updated fields for Bernard Sabiti
+api-1  | 2025-02-24 09:35:38 - INFO: Updated expert: Bernard Sabiti
+api-1  | 2025-02-24 09:35:39 - INFO: Updated fields for Rornald Kananura Muhumuza
+api-1  | 2025-02-24 09:35:39 - INFO: Updated expert: Rornald Kananura Muhumuza
+api-1  | 2025-02-24 09:35:39 - INFO: Expert update completed
+api-1  | 2025-02-24 09:35:39 - INFO: Expert data enrichment complete!
+api-1  | 2025-02-24 09:35:39 - INFO: Processing publications data...
+api-1  | 2025-02-24 09:35:39 - INFO: Processing OpenAlex publications...
+api-1  | 2025-02-24 09:35:40 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:40 - INFO: Generating genre from title for OpenAlex: The effect of education on household food security in two informal urban settlements in Kenya: a longitudinal analysis
+api-1  | 2025-02-24 09:35:40 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:40 - INFO: Added new publication: The effect of education on household food security in two informal urban settlements in Kenya: a longitudinal analysis
+api-1  | 2025-02-24 09:35:40 - INFO: Successfully processed publication: The effect of education on household food security in two informal urban settlements in Kenya: a longitudinal analysis with type: publications and genre: Academic
+api-1  | 2025-02-24 09:35:40 - INFO: Processed publication 1/10
+api-1  | 2025-02-24 09:35:40 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:40 - INFO: Generating genre from title for OpenAlex: Adolescent health in the 21st century
+api-1  | 2025-02-24 09:35:40 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:40 - INFO: Added new publication: Adolescent health in the 21st century
+api-1  | 2025-02-24 09:35:40 - INFO: Successfully processed publication: Adolescent health in the 21st century with type: publications and genre: Academic
+api-1  | 2025-02-24 09:35:40 - INFO: Processed publication 2/10
+api-1  | 2025-02-24 09:35:40 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:40 - INFO: Generating genre from title for OpenAlex: Emotional and Psychosocial Aspects of Menstrual Poverty in Resource-Poor Settings: A Qualitative Study of the Experiences of Adolescent Girls in an Informal Settlement in Nairobi
+api-1  | 2025-02-24 09:35:40 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:40 - INFO: Added new publication: Emotional and Psychosocial Aspects of Menstrual Poverty in Resource-Poor Settings: A Qualitative Study of the Experiences of Adolescent Girls in an Informal Settlement in Nairobi
+api-1  | 2025-02-24 09:35:40 - INFO: Successfully processed publication: Emotional and Psychosocial Aspects of Menstrual Poverty in Resource-Poor Settings: A Qualitative Study of the Experiences of Adolescent Girls in an Informal Settlement in Nairobi with type: publications and genre: Academic
+api-1  | 2025-02-24 09:35:40 - INFO: Processed publication 3/10
+api-1  | 2025-02-24 09:35:40 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:40 - INFO: Generating genre from title for OpenAlex: Household food (in)security and nutritional status of urban poor children aged 6 to 23 months in Kenya
+api-1  | 2025-02-24 09:35:40 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:40 - INFO: Added new publication: Household food (in)security and nutritional status of urban poor children aged 6 to 23 months in Kenya
+api-1  | 2025-02-24 09:35:40 - INFO: Successfully processed publication: Household food (in)security and nutritional status of urban poor children aged 6 to 23 months in Kenya with type: publications and genre: Academic
+api-1  | 2025-02-24 09:35:40 - INFO: Processed publication 4/10
+api-1  | 2025-02-24 09:35:40 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:40 - INFO: Generating genre from title for OpenAlex: Evaluating the impact of the DREAMS partnership to reduce HIV incidence among adolescent girls and young women in four settings: a study protocol
+api-1  | 2025-02-24 09:35:40 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:40 - INFO: Added new publication: Evaluating the impact of the DREAMS partnership to reduce HIV incidence among adolescent girls and young women in four settings: a study protocol
+api-1  | 2025-02-24 09:35:40 - INFO: Successfully processed publication: Evaluating the impact of the DREAMS partnership to reduce HIV incidence among adolescent girls and young women in four settings: a study protocol with type: publications and genre: Academic
+api-1  | 2025-02-24 09:35:40 - INFO: Processed publication 5/10
+api-1  | 2025-02-24 09:35:40 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:40 - INFO: Generating genre from title for OpenAlex: From HIV prevention to non-communicable disease health promotion efforts in sub-Saharan Africa
+api-1  | 2025-02-24 09:35:40 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:40 - INFO: Added new publication: From HIV prevention to non-communicable disease health promotion efforts in sub-Saharan Africa
+api-1  | 2025-02-24 09:35:40 - INFO: Successfully processed publication: From HIV prevention to non-communicable disease health promotion efforts in sub-Saharan Africa with type: publications and genre: Academic
+api-1  | 2025-02-24 09:35:40 - INFO: Processed publication 6/10
+api-1  | 2025-02-24 09:35:40 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:40 - INFO: Generating genre from title for OpenAlex: First Africa non-communicable disease research conference 2017: sharing evidence and identifying research priorities
+api-1  | 2025-02-24 09:35:40 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:40 - INFO: Added new publication: First Africa non-communicable disease research conference 2017: sharing evidence and identifying research priorities
+api-1  | 2025-02-24 09:35:40 - INFO: Successfully processed publication: First Africa non-communicable disease research conference 2017: sharing evidence and identifying research priorities with type: publications and genre: Academic
+api-1  | 2025-02-24 09:35:40 - INFO: Processed publication 7/10
+api-1  | 2025-02-24 09:35:40 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:40 - INFO: Generating genre from title for OpenAlex: Non-Communicable Diseases and Urbanization in African Cities: A Narrative Review
+api-1  | 2025-02-24 09:35:40 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:40 - INFO: Added new publication: Non-Communicable Diseases and Urbanization in African Cities: A Narrative Review
+api-1  | 2025-02-24 09:35:40 - INFO: Successfully processed publication: Non-Communicable Diseases and Urbanization in African Cities: A Narrative Review with type: publications and genre: Academic
+api-1  | 2025-02-24 09:35:40 - INFO: Processed publication 8/10
+api-1  | 2025-02-24 09:35:40 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:40 - INFO: Generating genre from title for OpenAlex: “They talked to me rudely”. Women perspectives on quality of post-abortion care in public health facilities in Kenya
+api-1  | 2025-02-24 09:35:40 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:40 - INFO: Added new publication: “They talked to me rudely”. Women perspectives on quality of post-abortion care in public health facilities in Kenya
+api-1  | 2025-02-24 09:35:40 - INFO: Successfully processed publication: “They talked to me rudely”. Women perspectives on quality of post-abortion care in public health facilities in Kenya with type: publications and genre: Academic
+api-1  | 2025-02-24 09:35:40 - INFO: Processed publication 9/10
+api-1  | 2025-02-24 09:35:40 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:40 - INFO: Generating genre from title for OpenAlex: Barriers to post-abortion care service provision: A cross-sectional analysis in Burkina Faso, Kenya and Nigeria
+api-1  | 2025-02-24 09:35:40 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:40 - INFO: Added new publication: Barriers to post-abortion care service provision: A cross-sectional analysis in Burkina Faso, Kenya and Nigeria
+api-1  | 2025-02-24 09:35:40 - INFO: Successfully processed publication: Barriers to post-abortion care service provision: A cross-sectional analysis in Burkina Faso, Kenya and Nigeria with type: publications and genre: Academic
+api-1  | 2025-02-24 09:35:40 - INFO: Processed publication 10/10
+api-1  | 2025-02-24 09:35:40 - INFO: Publications processing completed
+api-1  | 2025-02-24 09:35:40 - INFO: Processing ORCID publications...
+api-1  | 2025-02-24 09:35:40 - INFO: Gemini model setup completed
+api-1  | 2025-02-24 09:35:40 - INFO: TextSummarizer initialized successfully
+api-1  | 2025-02-24 09:35:41 - INFO: Processing publications for 57 experts
+api-1  | 2025-02-24 09:35:41 - INFO: Fetching publications for Caroline Kabiru
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully converted work: Balancing paid work and child care in a slum of Nairobi, Kenya: the case for centre-based child care
+api-1  | 2025-02-24 09:35:42 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:42 - INFO: Generating genre from abstract for orcid
+api-1  | 2025-02-24 09:35:42 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:42 - INFO: Added new publication: Balancing paid work and child care in a slum of Nairobi, Kenya: the case for centre-based child care
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully processed publication: Balancing paid work and child care in a slum of Nairobi, Kenya: the case for centre-based child care with type: journal-article and genre: Academic
+api-1  | 2025-02-24 09:35:42 - INFO: Processed publication 1/10: Balancing paid work and child care in a slum of Nairobi, Kenya: the case for centre-based child care
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully converted work: Female genital mutilation/cutting: Emerging factors sustaining medicalization related changes in selected Kenyan communities
+api-1  | 2025-02-24 09:35:42 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:42 - INFO: Generating genre from abstract for orcid
+api-1  | 2025-02-24 09:35:42 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:42 - INFO: Added new publication: Female genital mutilation/cutting: Emerging factors sustaining medicalization related changes in selected Kenyan communities
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully processed publication: Female genital mutilation/cutting: Emerging factors sustaining medicalization related changes in selected Kenyan communities with type: journal-article and genre: Academic
+api-1  | 2025-02-24 09:35:42 - INFO: Processed publication 2/10: Female genital mutilation/cutting: Emerging factors sustaining medicalization related changes in selected Kenyan communities
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully converted work: Kin support and child health: Investigating two approaches in an African slum
+api-1  | 2025-02-24 09:35:42 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:42 - INFO: Generating genre from abstract for orcid
+api-1  | 2025-02-24 09:35:42 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:42 - INFO: Added new publication: Kin support and child health: Investigating two approaches in an African slum
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully processed publication: Kin support and child health: Investigating two approaches in an African slum with type: journal-article and genre: Academic
+api-1  | 2025-02-24 09:35:42 - INFO: Processed publication 3/10: Kin support and child health: Investigating two approaches in an African slum
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully converted work: Method‐Specific Attributes that Influence Choice of Future Contraception Among Married Women in Nairobi's Informal Settlements
+api-1  | 2025-02-24 09:35:42 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:42 - INFO: Generating genre from abstract for orcid
+api-1  | 2025-02-24 09:35:42 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:42 - INFO: Added new publication: Method‐Specific Attributes that Influence Choice of Future Contraception Among Married Women in Nairobi's Informal Settlements
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully processed publication: Method‐Specific Attributes that Influence Choice of Future Contraception Among Married Women in Nairobi's Informal Settlements with type: journal-article and genre: Academic
+api-1  | 2025-02-24 09:35:42 - INFO: Processed publication 4/10: Method‐Specific Attributes that Influence Choice of Future Contraception Among Married Women in Nairobi's Informal Settlements
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully converted work: Violence victimisation and aspirations–expectations disjunction among adolescent girls in urban Kenya
+api-1  | 2025-02-24 09:35:42 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:42 - INFO: Generating genre from abstract for orcid
+api-1  | 2025-02-24 09:35:42 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:42 - INFO: Added new publication: Violence victimisation and aspirations–expectations disjunction among adolescent girls in urban Kenya
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully processed publication: Violence victimisation and aspirations–expectations disjunction among adolescent girls in urban Kenya with type: journal-article and genre: Academic
+api-1  | 2025-02-24 09:35:42 - INFO: Processed publication 5/10: Violence victimisation and aspirations–expectations disjunction among adolescent girls in urban Kenya
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully converted work: Understanding HIV risks among adolescent girls and young women in informal settlements of Nairobi, Kenya: Lessons for DREAMS
+api-1  | 2025-02-24 09:35:42 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:42 - INFO: Generating genre from abstract for orcid
+api-1  | 2025-02-24 09:35:42 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:42 - INFO: Added new publication: Understanding HIV risks among adolescent girls and young women in informal settlements of Nairobi, Kenya: Lessons for DREAMS
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully processed publication: Understanding HIV risks among adolescent girls and young women in informal settlements of Nairobi, Kenya: Lessons for DREAMS with type: journal-article and genre: Academic
+api-1  | 2025-02-24 09:35:42 - INFO: Processed publication 6/10: Understanding HIV risks among adolescent girls and young women in informal settlements of Nairobi, Kenya: Lessons for DREAMS
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully converted work: Timing of abortion among adolescent and young women presenting for post-abortion care in Kenya: a cross-sectional analysis of nationally-representative data.
+api-1  | 2025-02-24 09:35:42 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:42 - INFO: Generating genre from abstract for orcid
+api-1  | 2025-02-24 09:35:42 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:42 - INFO: Added new publication: Timing of abortion among adolescent and young women presenting for post-abortion care in Kenya: a cross-sectional analysis of nationally-representative data.
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully processed publication: Timing of abortion among adolescent and young women presenting for post-abortion care in Kenya: a cross-sectional analysis of nationally-representative data. with type: journal-article and genre: Academic
+api-1  | 2025-02-24 09:35:42 - INFO: Processed publication 7/10: Timing of abortion among adolescent and young women presenting for post-abortion care in Kenya: a cross-sectional analysis of nationally-representative data.
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully converted work: "It takes more than a fellowship program": reflections on capacity strengthening for health systems research in sub-Saharan Africa.
+api-1  | 2025-02-24 09:35:42 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:42 - INFO: Generating genre from abstract for orcid
+api-1  | 2025-02-24 09:35:42 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:42 - INFO: Added new publication: "It takes more than a fellowship program": reflections on capacity strengthening for health systems research in sub-Saharan Africa.
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully processed publication: "It takes more than a fellowship program": reflections on capacity strengthening for health systems research in sub-Saharan Africa. with type: journal-article and genre: Academic
+api-1  | 2025-02-24 09:35:42 - INFO: Processed publication 8/10: "It takes more than a fellowship program": reflections on capacity strengthening for health systems research in sub-Saharan Africa.
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully converted work: Providers, Unmarried Young Women, and Post-Abortion Care in Kenya.
+api-1  | 2025-02-24 09:35:42 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:42 - INFO: Generating genre from abstract for orcid
+api-1  | 2025-02-24 09:35:42 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:42 - INFO: Added new publication: Providers, Unmarried Young Women, and Post-Abortion Care in Kenya.
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully processed publication: Providers, Unmarried Young Women, and Post-Abortion Care in Kenya. with type: journal-article and genre: Academic
+api-1  | 2025-02-24 09:35:42 - INFO: Processed publication 9/10: Providers, Unmarried Young Women, and Post-Abortion Care in Kenya.
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully converted work: "Boys Should Have the Courage to Ask a Girl Out": Gender Norms in Early Adolescent Romantic Relationships.
+api-1  | 2025-02-24 09:35:42 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:42 - INFO: Generating genre from abstract for orcid
+api-1  | 2025-02-24 09:35:42 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:35:42 - INFO: Added new publication: "Boys Should Have the Courage to Ask a Girl Out": Gender Norms in Early Adolescent Romantic Relationships.
+api-1  | 2025-02-24 09:35:42 - INFO: Successfully processed publication: "Boys Should Have the Courage to Ask a Girl Out": Gender Norms in Early Adolescent Romantic Relationships. with type: journal-article and genre: Academic
+api-1  | 2025-02-24 09:35:42 - INFO: Processed publication 10/10: "Boys Should Have the Courage to Ask a Girl Out": Gender Norms in Early Adolescent Romantic Relationships.
+api-1  | 2025-02-24 09:35:42 - INFO: Reached maximum total publication limit (10)
+api-1  | 2025-02-24 09:35:42 - INFO: ORCID publications processing completed. Total processed: 10
+api-1  | 2025-02-24 09:35:42 - INFO: Database connection closed
+api-1  | 2025-02-24 09:35:42 - INFO: OrcidProcessor resources cleaned up
+api-1  | 2025-02-24 09:35:42 - INFO: 
+api-1  | ==================================================
+api-1  | 2025-02-24 09:35:42 - INFO: Processing KnowHub content...
+api-1  | 2025-02-24 09:35:42 - INFO: ==================================================
+api-1  | 2025-02-24 09:35:42 - INFO: Gemini model setup completed
+api-1  | 2025-02-24 09:35:42 - INFO: TextSummarizer initialized successfully
+api-1  | 2025-02-24 09:35:42 - INFO: KnowhubScraper initialized
+api-1  | 2025-02-24 09:35:42 - INFO: Using publications URL: https://knowhub.aphrc.org//handle/123456789/1
+api-1  | 2025-02-24 09:35:42 - INFO: Additional endpoints: documents, reports, multimedia
+api-1  | 2025-02-24 09:35:42 - INFO: Fetching from original publications endpoint...
+api-1  | 2025-02-24 09:35:42 - INFO: Starting to fetch up to 2 publications from Knowhub
+api-1  | /usr/local/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'knowhub.aphrc.org'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+api-1  |   warnings.warn(
+api-1  | 2025-02-24 09:35:44 - INFO: Request status code: 200
+api-1  | 2025-02-24 09:35:44 - INFO: Found 10 publication items
+api-1  | 2025-02-24 09:35:44 - INFO: 
+api-1  | Processing publication 1/2
+api-1  | 2025-02-24 09:35:44 - INFO: 
+api-1  | Extracting publication information...
+api-1  | 2025-02-24 09:35:44 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:47 - INFO: Successfully generated content for: APHRC Newsletter Issue 3 2024: The Stories of Change
+api-1  |                     ﻿...
+api-1  | 2025-02-24 09:35:47 - INFO: 
+api-1  | Processing publication 2/2
+api-1  | 2025-02-24 09:35:47 - INFO: 
+api-1  | Extracting publication information...
+api-1  | 2025-02-24 09:35:47 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:48 - INFO: Successfully generated content for: Co-Creation and Validation Workshop for Examining Participation and Quality of Experiences of Women ...
+api-1  | 2025-02-24 09:35:48 - INFO: Fetching from documents endpoint...
+api-1  | 2025-02-24 09:35:48 - INFO: Fetching documents from: https://knowhub.aphrc.org//handle/123456789/2
+api-1  | /usr/local/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'knowhub.aphrc.org'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+api-1  |   warnings.warn(
+api-1  | 2025-02-24 09:35:51 - INFO: 
+api-1  | Processing documents item 1/2
+api-1  | 2025-02-24 09:35:51 - INFO: 
+api-1  | Extracting publication information...
+api-1  | 2025-02-24 09:35:51 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:52 - INFO: Successfully generated content for: APHRC Annual Performance Review Report
+api-1  |                     ﻿...
+api-1  | 2025-02-24 09:35:52 - INFO: 
+api-1  | Processing documents item 2/2
+api-1  | 2025-02-24 09:35:52 - INFO: 
+api-1  | Extracting publication information...
+api-1  | 2025-02-24 09:35:52 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:53 - INFO: Successfully generated content for: APHRC Resource Mobilization Strategy 2022-2026
+api-1  |                     ﻿...
+api-1  | 2025-02-24 09:35:53 - INFO: Fetching from reports endpoint...
+api-1  | 2025-02-24 09:35:53 - INFO: Fetching reports from: https://knowhub.aphrc.org//handle/123456789/3
+api-1  | /usr/local/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'knowhub.aphrc.org'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+api-1  |   warnings.warn(
+api-1  | 2025-02-24 09:35:56 - INFO: 
+api-1  | Processing reports item 1/2
+api-1  | 2025-02-24 09:35:56 - INFO: 
+api-1  | Extracting publication information...
+api-1  | 2025-02-24 09:35:56 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:57 - INFO: Successfully generated content for: Promoting Holistic Health and Wellbeing of Pregnant and Parenting Adolescents and Their Children in ...
+api-1  | 2025-02-24 09:35:57 - INFO: 
+api-1  | Processing reports item 2/2
+api-1  | 2025-02-24 09:35:57 - INFO: 
+api-1  | Extracting publication information...
+api-1  | 2025-02-24 09:35:57 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:35:59 - INFO: Successfully generated content for: APHRC Organizational Effectiveness Assessment Fact Sheet May 2024
+api-1  |                     ﻿...
+api-1  | 2025-02-24 09:35:59 - INFO: Fetching from multimedia endpoint...
+api-1  | 2025-02-24 09:35:59 - INFO: Fetching multimedia from: https://knowhub.aphrc.org//handle/123456789/4
+api-1  | /usr/local/lib/python3.11/site-packages/urllib3/connectionpool.py:1097: InsecureRequestWarning: Unverified HTTPS request is being made to host 'knowhub.aphrc.org'. Adding certificate verification is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#tls-warnings
+api-1  |   warnings.warn(
+api-1  | 2025-02-24 09:36:02 - INFO: 
+api-1  | Processing multimedia item 1/2
+api-1  | 2025-02-24 09:36:02 - INFO: 
+api-1  | Extracting publication information...
+api-1  | 2025-02-24 09:36:02 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:36:03 - INFO: Successfully generated content for: A mixed Methods Evaluation of Impact of Short Course Training in Implementation Research in East Afr...
+api-1  | 2025-02-24 09:36:03 - INFO: 
+api-1  | Processing multimedia item 2/2
+api-1  | 2025-02-24 09:36:03 - INFO: 
+api-1  | Extracting publication information...
+api-1  | 2025-02-24 09:36:03 - INFO: No abstract available, generating description from title
+api-1  | 2025-02-24 09:36:04 - INFO: Successfully generated content for: Special Brown Bag featuring Scholars from the University of Ibadan
+api-1  |                     ﻿...
+api-1  | 2025-02-24 09:36:04 - INFO: 
+api-1  | Processing 2 items from publications
+api-1  | 2025-02-24 09:36:04 - INFO: Generating genre from abstract for knowhub
+api-1  | 2025-02-24 09:36:04 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:36:04 - INFO: Added new publication: APHRC Newsletter Issue 3 2024: The Stories of Change
+api-1  |                     ﻿
+api-1  | 2025-02-24 09:36:04 - INFO: Successfully processed publication: APHRC Newsletter Issue 3 2024: The Stories of Change
+api-1  |                     ﻿ with type: documents and genre: Academic
+api-1  | 2025-02-24 09:36:04 - INFO: Successfully processed publications item: APHRC Newsletter Issue 3 2024: The Stories of Change
+api-1  |                     ﻿
+api-1  | 2025-02-24 09:36:04 - INFO: Generating genre from abstract for knowhub
+api-1  | 2025-02-24 09:36:04 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:36:04 - INFO: Added new publication: Co-Creation and Validation Workshop for Examining Participation and Quality of Experiences of Women in Science Technology Engineering and Mathematics (STEM): Postgraduate Training Programs and Careers in East Africa
+api-1  |                     ﻿
+api-1  | 2025-02-24 09:36:04 - INFO: Successfully processed publication: Co-Creation and Validation Workshop for Examining Participation and Quality of Experiences of Women in Science Technology Engineering and Mathematics (STEM): Postgraduate Training Programs and Careers in East Africa
+api-1  |                     ﻿ with type: documents and genre: Academic
+api-1  | 2025-02-24 09:36:04 - INFO: Successfully processed publications item: Co-Creation and Validation Workshop for Examining Participation and Quality of Experiences of Women in Science Technology Engineering and Mathematics (STEM): Postgraduate Training Programs and Careers in East Africa
+api-1  |                     ﻿
+api-1  | 2025-02-24 09:36:04 - INFO: 
+api-1  | Processing 2 items from documents
+api-1  | 2025-02-24 09:36:04 - INFO: Generating genre from abstract for knowhub
+api-1  | 2025-02-24 09:36:04 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:36:04 - INFO: Added new publication: APHRC Annual Performance Review Report
+api-1  |                     ﻿
+api-1  | 2025-02-24 09:36:04 - INFO: Successfully processed publication: APHRC Annual Performance Review Report
+api-1  |                     ﻿ with type: publications and genre: Academic
+api-1  | 2025-02-24 09:36:04 - INFO: Successfully processed documents item: APHRC Annual Performance Review Report
+api-1  |                     ﻿
+api-1  | 2025-02-24 09:36:04 - INFO: Generating genre from abstract for knowhub
+api-1  | 2025-02-24 09:36:04 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:36:04 - INFO: Added new publication: APHRC Resource Mobilization Strategy 2022-2026
+api-1  |                     ﻿
+api-1  | 2025-02-24 09:36:04 - INFO: Successfully processed publication: APHRC Resource Mobilization Strategy 2022-2026
+api-1  |                     ﻿ with type: reports and genre: Academic
+api-1  | 2025-02-24 09:36:04 - INFO: Successfully processed documents item: APHRC Resource Mobilization Strategy 2022-2026
+api-1  |                     ﻿
+api-1  | 2025-02-24 09:36:04 - INFO: 
+api-1  | Processing 2 items from reports
+api-1  | 2025-02-24 09:36:04 - INFO: Generating genre from abstract for knowhub
+api-1  | 2025-02-24 09:36:04 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:36:04 - INFO: Added new publication: Promoting Holistic Health and Wellbeing of Pregnant and Parenting Adolescents and Their Children in Africa: A Life Course Model
+api-1  |                     ﻿
+api-1  | 2025-02-24 09:36:04 - INFO: Successfully processed publication: Promoting Holistic Health and Wellbeing of Pregnant and Parenting Adolescents and Their Children in Africa: A Life Course Model
+api-1  |                     ﻿ with type: documents and genre: Academic
+api-1  | 2025-02-24 09:36:04 - INFO: Successfully processed reports item: Promoting Holistic Health and Wellbeing of Pregnant and Parenting Adolescents and Their Children in Africa: A Life Course Model
+api-1  |                     ﻿
+api-1  | 2025-02-24 09:36:04 - INFO: Generating genre from abstract for knowhub
+api-1  | 2025-02-24 09:36:04 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:36:04 - INFO: Added new publication: APHRC Organizational Effectiveness Assessment Fact Sheet May 2024
+api-1  |                     ﻿
+api-1  | 2025-02-24 09:36:04 - INFO: Successfully processed publication: APHRC Organizational Effectiveness Assessment Fact Sheet May 2024
+api-1  |                     ﻿ with type: publications and genre: Academic
+api-1  | 2025-02-24 09:36:04 - INFO: Successfully processed reports item: APHRC Organizational Effectiveness Assessment Fact Sheet May 2024
+api-1  |                     ﻿
+api-1  | 2025-02-24 09:36:04 - INFO: 
+api-1  | Processing 2 items from multimedia
+api-1  | 2025-02-24 09:36:04 - INFO: Generating genre from abstract for knowhub
+api-1  | 2025-02-24 09:36:04 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:36:04 - INFO: Added new publication: A mixed Methods Evaluation of Impact of Short Course Training in Implementation Research in East Africa.
+api-1  |                     ﻿
+api-1  | 2025-02-24 09:36:04 - INFO: Successfully processed publication: A mixed Methods Evaluation of Impact of Short Course Training in Implementation Research in East Africa.
+api-1  |                     ﻿ with type: other and genre: Academic
+api-1  | 2025-02-24 09:36:04 - INFO: Successfully processed multimedia item: A mixed Methods Evaluation of Impact of Short Course Training in Implementation Research in East Africa.
+api-1  |                     ﻿
+api-1  | 2025-02-24 09:36:04 - INFO: Generating genre from abstract for knowhub
+api-1  | 2025-02-24 09:36:04 - ERROR: Error generating summary and genre: 'TextSummarizer' object has no attribute 'create_title_only_prompt'
+api-1  | 2025-02-24 09:36:04 - INFO: Added new publication: Special Brown Bag featuring Scholars from the University of Ibadan
+api-1  |                     ﻿
+api-1  | 2025-02-24 09:36:04 - INFO: Successfully processed publication: Special Brown Bag featuring Scholars from the University of Ibadan
+api-1  |                     ﻿ with type: other and genre: Academic
+api-1  | 2025-02-24 09:36:04 - INFO: Successfully processed multimedia item: Special Brown Bag featuring Scholars from the University of Ibadan
+api-1  |                     ﻿
+api-1  | 2025-02-24 09:36:04 - INFO: KnowhubScraper resources cleaned up
+api-1  | 2025-02-24 09:36:04 - INFO: 
+api-1  | KnowHub content processing complete!
+api-1  | 2025-02-24 09:36:04 - INFO: KnowhubScraper resources cleaned up
+api-1  | 2025-02-24 09:36:04 - INFO: Processing Research Nexus publications...
+api-1  | 2025-02-24 09:36:04 - INFO: Gemini model setup completed
+api-1  | 2025-02-24 09:36:04 - INFO: TextSummarizer initialized successfully
+api-1  | 2025-02-24 09:38:15 - ERROR: Chrome initialization failed: HTTPConnectionPool(host='localhost', port=45919): Read timed out. (read timeout=120)
+api-1  | 2025-02-24 09:38:15 - ERROR: Error processing Research Nexus publications: HTTPConnectionPool(host='localhost', port=45919): Read timed out. (read timeout=120)
+api-1  | 2025-02-24 09:38:15 - INFO: 
+api-1  | ==================================================
+api-1  | 2025-02-24 09:38:15 - INFO: Processing Website publications...
+api-1  | 2025-02-24 09:38:15 - INFO: ==================================================
+api-1  | 2025-02-24 09:38:15 - INFO: Gemini model setup completed
+api-1  | 2025-02-24 09:38:15 - INFO: TextSummarizer initialized successfully
+api-1  | 2025-02-24 09:38:16 - INFO: Chrome WebDriver initialized successfully
+api-1  | 2025-02-24 09:38:16 - INFO: Accessing URL: https://aphrc.org/publications/

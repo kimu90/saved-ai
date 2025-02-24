@@ -1,0 +1,64 @@
+// tasks.json
+{
+  "version": "2.0.0",
+  "tasks": [
+      {
+          "label": "docker-run: debug",
+          "type": "docker-run",
+          "dependsOn": [
+              "docker-build"
+          ],
+          "dockerRun": {
+              "image": "aphrc-api:latest",
+              "env": {
+                  "PYTHONUNBUFFERED": "1",
+                  "LOG_LEVEL": "DEBUG",
+                  "UVICORN_LOG_LEVEL": "debug"
+              },
+              "volumes": [
+                  {
+                      "containerPath": "/code",
+                      "localPath": "${workspaceFolder}"
+                  }
+              ],
+              "ports": [
+                  {
+                      "containerPort": 8000,
+                      "hostPort": 8000
+                  },
+                  {
+                      "containerPort": 5678,
+                      "hostPort": 5678
+                  }
+              ],
+              "network": "aphrc-network"
+          },
+          "python": {
+              "args": [
+                  "-m",
+                  "debugpy",
+                  "--listen",
+                  "0.0.0.0:5678",
+                  "--wait-for-client",
+                  "-m",
+                  "uvicorn",
+                  "app:app",
+                  "--host",
+                  "0.0.0.0",
+                  "--port",
+                  "8000",
+                  "--reload"
+              ]
+          }
+      },
+      {
+          "label": "docker-build",
+          "type": "docker-build",
+          "dockerBuild": {
+              "context": "${workspaceFolder}",
+              "dockerfile": "${workspaceFolder}/Dockerfile",
+              "tag": "aphrc-api:latest"
+          }
+      }
+  ]
+}

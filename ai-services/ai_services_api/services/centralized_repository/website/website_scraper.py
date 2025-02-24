@@ -17,6 +17,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 
 from ai_services_api.services.centralized_repository.ai_summarizer import TextSummarizer
+from ai_services_api.services.centralized_repository.database_manager import DatabaseManager
+
 from ai_services_api.services.centralized_repository.text_processor import safe_str
 
 logging.basicConfig(
@@ -30,6 +32,7 @@ class WebsiteScraper:
    def __init__(self, summarizer: Optional[TextSummarizer] = None):
        """Initialize WebsiteScraper."""
        self.base_url = "https://aphrc.org/publications/"
+       self.db = DatabaseManager()  # Add this line
        self.headers = {
            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
        }

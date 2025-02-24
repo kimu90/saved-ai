@@ -3,7 +3,7 @@ import logging
 import google.generativeai as genai
 from typing import Optional, List, Dict, Tuple
 from tenacity import retry, stop_after_attempt, wait_exponential
-
+import json
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s: %(message)s',
@@ -80,6 +80,68 @@ class TextSummarizer:
         except Exception as e:
             logger.error(f"Error in content generation: {e}")
             return ("Failed to generate content due to technical issues", None)
+
+    def classify_field_and_subfield(self, title: str, abstract: str, domains: List[str]) -> Tuple[str, str]:
+        """
+        Classify content into predefined fields and subfields using Gemini.
+        
+        Args:
+            title: Content title
+            abstract: Content abstract
+            domains: List of domain tags
+            
+        Returns:
+            Tuple[str, str]: (field, subfield)
+        """
+        field_hierarchy = {
+            "Computer Science": ["AI/ML", "Software Engineering", "Data Science", "Cybersecurity", "Networks"],
+            "Life Sciences": ["Molecular Biology", "Genetics", "Neuroscience", "Ecology", "Biotechnology"],
+            "Physical Sciences": ["Physics", "Chemistry", "Astronomy", "Materials Science", "Earth Science"],
+            "Engineering": ["Mechanical", "Electrical", "Civil", "Chemical", "Aerospace"],
+            "Medicine": ["Clinical Research", "Public Health", "Pharmacology", "Medical Technology", "Epidemiology"],
+            "Social Sciences": ["Psychology", "Sociology", "Economics", "Political Science", "Anthropology"],
+            "Environmental Science": ["Climate Studies", "Conservation", "Environmental Policy", "Sustainability", "Resource Management"],
+            "Mathematics": ["Pure Mathematics", "Applied Mathematics", "Statistics", "Operations Research", "Mathematical Physics"],
+            "Business": ["Management", "Finance", "Marketing", "Operations", "Entrepreneurship"],
+            "Humanities": ["History", "Philosophy", "Literature", "Cultural Studies", "Linguistics"]
+        }
+
+        prompt = f"""
+        Analyze this content and classify it into exactly one field and one subfield:
+
+        Title: {title}
+        Abstract: {abstract}
+        Domains: {', '.join(domains)}
+
+        Available Fields and Subfields:
+        {json.dumps(field_hierarchy, indent=2)}
+
+        Return ONLY:
+        FIELD: [main field]
+        SUBFIELD: [specific subfield]
+        """
+
+        try:
+            response = self.model.generate_content(prompt)
+            result = response.text.strip()
+            
+            field = None
+            subfield = None
+            
+            for line in result.split('\n'):
+                if line.startswith('FIELD:'):
+                    field = line.replace('FIELD:', '').strip()
+                elif line.startswith('SUBFIELD:'):
+                    subfield = line.replace('SUBFIELD:', '').strip()
+            
+            if field in field_hierarchy and subfield in field_hierarchy[field]:
+                return field, subfield
+            else:
+                return "Computer Science", "Software Engineering"  # Default fallback
+                
+        except Exception as e:
+            logger.error(f"Error in field classification: {e}")
+            return "Computer Science", "Software Engineering"
 
     def _create_combined_prompt(self, title: str, abstract: str) -> str:
         """Create a prompt for both summarization and content type classification."""
