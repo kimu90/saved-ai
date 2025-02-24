@@ -137,13 +137,36 @@ class MessageHandler:
             # Get the response stream from LLM
             raw_response_stream = self.llm_manager.generate_async_response(message)
             
+            # Initialize response tracking
+            response_chunks = []
+            
             # Process and format the response stream
             async for formatted_chunk in self.process_stream_response(raw_response_stream):
                 logger.debug(f"Yielding formatted response chunk (length: {len(formatted_chunk)})")
+                response_chunks.append(formatted_chunk)
                 yield formatted_chunk
             
+            # Prepare complete response
+            complete_response = ''.join(response_chunks)
+            response_time = time.time() - start_time
+            
             logger.info("Message processing completed successfully")
-            logger.debug(f"Total processing time: {time.time() - start_time:.2f} seconds")
+            logger.debug(f"Total processing time: {response_time:.2f} seconds")
+            
+            # Save chat to database
+            await self.save_chat_to_db(user_id, message, complete_response, response_time)
+            
+            # Get sentiment data from LLM
+            sentiment_data = await self.llm_manager.analyze_sentiment(message)
+            
+            # Record interaction with sentiment metrics
+            await self.record_interaction(session_id, user_id, message, {
+                'response': complete_response,
+                'metrics': {
+                    'response_time': response_time,
+                    'sentiment': sentiment_data
+                }
+            })
             
         except Exception as e:
             logger.error("Critical error in message stream processing", exc_info=True)
@@ -212,36 +235,26 @@ class MessageHandler:
             logger.error(f"Error saving chat to database: {e}")
 
     
-
-    
-
     async def record_interaction(self, session_id: str, user_id: str, query: str, response_data: dict):
-        """Record chat interaction with async database and store sentiment metrics."""
         try:
             async with DatabaseConnector.get_connection() as conn:
                 # Start a transaction
                 async with conn.transaction():
                     metrics = response_data.get('metrics', {})
                     
-                    # Insert into chat_interactions table
-                    interaction_result = await conn.fetchrow("""
-                        INSERT INTO chat_interactions 
-                            (session_id, user_id, query, response, 
-                            response_time, intent_type, intent_confidence)
-                        VALUES ($1, $2, $3, $4, $5, $6, $7)
-                        RETURNING id
-                    """, 
-                        session_id,
-                        user_id,
-                        query,
-                        response_data.get('response', ''),
-                        metrics.get('response_time', 0.0),
-                        metrics.get('intent', {}).get('type', 'general'),
-                        metrics.get('intent', {}).get('confidence', 0.0)
-                    )
+                    # Get the chat_log_id from the chatbot_logs table
+                    chat_log_result = await conn.fetchrow("""
+                        SELECT id FROM chatbot_logs 
+                        WHERE user_id = $1 AND query = $2 
+                        ORDER BY timestamp DESC
+                        LIMIT 1
+                    """, user_id, query)
                     
-                    # Get the interaction_id from the insert
-                    interaction_id = interaction_result['id']
+                    if not chat_log_result:
+                        logger.warning("Corresponding chat log not found for sentiment metrics")
+                        return
+                    
+                    chat_log_id = chat_log_result['id']
                     
                     # Get sentiment data from metrics
                     sentiment_data = metrics.get('sentiment', {})
@@ -250,11 +263,11 @@ class MessageHandler:
                     # Insert into sentiment_metrics table
                     await conn.execute("""
                         INSERT INTO sentiment_metrics
-                            (interaction_id, sentiment_score, emotion_labels,
+                            (chatbot_log_id, sentiment_score, emotion_labels,
                             satisfaction_score, urgency_score, clarity_score)
                         VALUES ($1, $2, $3, $4, $5, $6)
                     """,
-                        interaction_id,
+                        chat_log_id,
                         sentiment_data.get('sentiment_score', 0.0),
                         emotion_labels,
                         sentiment_data.get('aspects', {}).get('satisfaction', 0.0),
@@ -262,7 +275,7 @@ class MessageHandler:
                         sentiment_data.get('aspects', {}).get('clarity', 0.0)
                     )
                     
-                    logger.info(f"Recorded interaction {interaction_id} with sentiment metrics")
+                    logger.info(f"Recorded sentiment metrics for chat log ID: {chat_log_id}")
                     
         except Exception as e:
             logger.error(f"Error recording interaction and sentiment metrics: {e}", exc_info=True)
