@@ -161,11 +161,19 @@ class SystemInitializer:
     async def process_publications(self, summarizer: Optional[TextSummarizer] = None) -> None:
         """Process publications from all sources"""
         openalex_processor = OpenAlexProcessor()
-        publication_processor = PublicationProcessor(openalex_processor.db, TextSummarizer())
+        publication_processor = PublicationProcessor(openalex_procesgit add .gitattributes
+git commit -m "Track large files with Git LFS"
+sor.db, TextSummarizer())
         expert_processor = ExpertProcessor(openalex_processor.db, os.getenv('OPENALEX_API_URL'))
 
         try:
-            # First, process experts' fields and domains using Gemini
+            # First, analyze existing publications to establish fields
+            logger.info("Analyzing existing publications for field classification...")
+            existing_publications = self.db.get_all_publications()
+            field_structure = summarizer.analyze_content_corpus(existing_publications)
+            logger.info(f"Discovered field structure: {json.dumps(field_structure, indent=2)}")
+
+            # Process experts' fields and domains using Gemini
             logger.info("Updating experts with OpenAlex data...")
             await openalex_processor.update_experts_with_openalex()
             logger.info("Expert data enrichment complete!")
@@ -204,8 +212,25 @@ class SystemInitializer:
                             logger.info(f"\nProcessing {len(items)} items from {content_type}")
                             for item in items:
                                 try:
+                                    # Process the publication
                                     publication_processor.process_single_work(item, source='knowhub')
                                     logger.info(f"Successfully processed {content_type} item: {item.get('title', 'Unknown Title')}")
+                                    
+                                    # Classify fields
+                                    field, subfield = knowhub_scraper.summarizer.classify_field_and_subfield(
+                                        title=item.get('title', ''),
+                                        abstract=item.get('abstract', ''),
+                                        domains=item.get('domains', [])
+                                    )
+                                    
+                                    # Update classification in database
+                                    knowhub_scraper.db.execute("""
+                                        UPDATE resources_resource 
+                                        SET field = %s, subfield = %s
+                                        WHERE title = %s AND source = 'knowhub'
+                                    """, (field, subfield, item.get('title')))
+                                    
+                                    logger.info(f"Classified {item.get('title')}: {field}/{subfield}")
                                 except Exception as e:
                                     logger.error(f"Error processing {content_type} item: {e}")
                                     continue
@@ -229,7 +254,28 @@ class SystemInitializer:
 
                     if research_nexus_publications:
                         for pub in research_nexus_publications:
-                            publication_processor.process_single_work(pub, source='researchnexus')
+                            try:
+                                # Process the publication
+                                publication_processor.process_single_work(pub, source='researchnexus')
+                                
+                                # Classify fields
+                                field, subfield = research_nexus_scraper.summarizer.classify_field_and_subfield(
+                                    title=pub.get('title', ''),
+                                    abstract=pub.get('abstract', ''),
+                                    domains=pub.get('domains', [])
+                                )
+                                
+                                # Update classification
+                                research_nexus_scraper.db.execute("""
+                                    UPDATE resources_resource 
+                                    SET field = %s, subfield = %s
+                                    WHERE title = %s AND source = 'researchnexus'
+                                """, (field, subfield, pub.get('title')))
+                                
+                                logger.info(f"Classified {pub.get('title')}: {field}/{subfield}")
+                            except Exception as e:
+                                logger.error(f"Error processing research nexus publication: {e}")
+                                continue
                     else:
                         logger.warning("No Research Nexus publications found")
 
@@ -252,30 +298,25 @@ class SystemInitializer:
                         logger.info(f"\nProcessing {len(website_publications)} website publications")
                         for pub in website_publications:
                             try:
-                                # First process the publication
+                                # Process the publication
                                 publication_processor.process_single_work(pub, source='website')
                                 logger.info(f"Successfully processed website publication: {pub.get('title', 'Unknown Title')}")
                                 
-                                # Then classify fields
-                                try:
-                                    field, subfield = website_scraper.summarizer.classify_field_and_subfield(
-                                        title=pub.get('title', ''),
-                                        abstract=pub.get('abstract', ''),
-                                        domains=pub.get('domains', [])
-                                    )
-                                    
-                                    # Update fields directly in database
-                                    website_scraper.db.execute("""
-                                        UPDATE resources_resource 
-                                        SET field = %s, subfield = %s
-                                        WHERE title = %s AND source = 'website'
-                                    """, (field, subfield, pub.get('title')))
-                                    
-                                    logger.info(f"Classified {pub.get('title')}: {field}/{subfield}")
-                                except Exception as e:
-                                    logger.error(f"Error in field classification: {e}")
-                                    continue
-                                    
+                                # Classify fields
+                                field, subfield = website_scraper.summarizer.classify_field_and_subfield(
+                                    title=pub.get('title', ''),
+                                    abstract=pub.get('abstract', ''),
+                                    domains=pub.get('domains', [])
+                                )
+                                
+                                # Update classification
+                                website_scraper.db.execute("""
+                                    UPDATE resources_resource 
+                                    SET field = %s, subfield = %s
+                                    WHERE title = %s AND source = 'website'
+                                """, (field, subfield, pub.get('title')))
+                                
+                                logger.info(f"Classified {pub.get('title')}: {field}/{subfield}")
                             except Exception as e:
                                 logger.error(f"Error processing website publication: {e}")
                                 continue
@@ -290,8 +331,6 @@ class SystemInitializer:
                 finally:
                     if 'website_scraper' in locals():
                         website_scraper.close()
-
-                
 
         except Exception as e:
             logger.error(f"Data processing failed: {e}")

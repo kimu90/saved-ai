@@ -83,7 +83,7 @@ class TextSummarizer:
 
     def classify_field_and_subfield(self, title: str, abstract: str, domains: List[str]) -> Tuple[str, str]:
         """
-        Classify content into predefined fields and subfields using Gemini.
+        Dynamically classify content by analyzing its themes and patterns.
         
         Args:
             title: Content title
@@ -93,32 +93,28 @@ class TextSummarizer:
         Returns:
             Tuple[str, str]: (field, subfield)
         """
-        field_hierarchy = {
-            "Computer Science": ["AI/ML", "Software Engineering", "Data Science", "Cybersecurity", "Networks"],
-            "Life Sciences": ["Molecular Biology", "Genetics", "Neuroscience", "Ecology", "Biotechnology"],
-            "Physical Sciences": ["Physics", "Chemistry", "Astronomy", "Materials Science", "Earth Science"],
-            "Engineering": ["Mechanical", "Electrical", "Civil", "Chemical", "Aerospace"],
-            "Medicine": ["Clinical Research", "Public Health", "Pharmacology", "Medical Technology", "Epidemiology"],
-            "Social Sciences": ["Psychology", "Sociology", "Economics", "Political Science", "Anthropology"],
-            "Environmental Science": ["Climate Studies", "Conservation", "Environmental Policy", "Sustainability", "Resource Management"],
-            "Mathematics": ["Pure Mathematics", "Applied Mathematics", "Statistics", "Operations Research", "Mathematical Physics"],
-            "Business": ["Management", "Finance", "Marketing", "Operations", "Entrepreneurship"],
-            "Humanities": ["History", "Philosophy", "Literature", "Cultural Studies", "Linguistics"]
-        }
-
         prompt = f"""
-        Analyze this content and classify it into exactly one field and one subfield:
+        Analyze this academic content and create a natural field classification:
 
         Title: {title}
         Abstract: {abstract}
         Domains: {', '.join(domains)}
 
-        Available Fields and Subfields:
-        {json.dumps(field_hierarchy, indent=2)}
+        Instructions:
+        1. First, determine the broad field this content belongs to, considering the overall theme and academic discipline.
+        2. Then, determine a more specific subfield that best describes the specialized area within that field.
+        3. The classification should emerge naturally from the content rather than fitting into predefined categories.
+        4. Your field should be broad enough to group similar content but specific enough to be meaningful.
+        5. Your subfield should capture the specific focus area within that field.
 
         Return ONLY:
-        FIELD: [main field]
-        SUBFIELD: [specific subfield]
+        FIELD: [naturally derived field]
+        SUBFIELD: [specific subfield within that field]
+
+        For example:
+        For a paper about machine learning in agriculture:
+        FIELD: Agricultural Technology
+        SUBFIELD: AI-Driven Crop Management
         """
 
         try:
@@ -134,14 +130,73 @@ class TextSummarizer:
                 elif line.startswith('SUBFIELD:'):
                     subfield = line.replace('SUBFIELD:', '').strip()
             
-            if field in field_hierarchy and subfield in field_hierarchy[field]:
+            if field and subfield:
                 return field, subfield
             else:
-                return "Computer Science", "Software Engineering"  # Default fallback
+                # Only use this as a last resort if classification fails
+                return "Unclassified", "General"
                 
         except Exception as e:
             logger.error(f"Error in field classification: {e}")
-            return "Computer Science", "Software Engineering"
+            return "Unclassified", "General"
+        
+    def analyze_content_corpus(self, publications: List[Dict]) -> Dict[str, List[str]]:
+        """
+        Analyze a corpus of publications to identify natural field groupings.
+        
+        Args:
+            publications: List of publication dictionaries with titles, abstracts, etc.
+        
+        Returns:
+            Dict mapping identified fields to lists of common subfields
+        """
+        corpus_prompt = f"""
+        Analyze this collection of {len(publications)} academic publications and identify natural groupings:
+
+        Publications:
+        {json.dumps([{
+            'title': p.get('title', ''),
+            'abstract': p.get('abstract', '')[:200],  # Truncate for prompt length
+            'domains': p.get('domains', [])
+        } for p in publications[:50]], indent=2)}  # Sample for analysis
+
+        Task:
+        1. Identify the major thematic fields that emerge from this content
+        2. For each field, identify common specialized subfields
+        3. Consider interdisciplinary areas and emerging fields
+        4. Group similar themes while maintaining meaningful distinctions
+
+        Return the classification structure as:
+        FIELDS:
+        [Field 1]
+        - [Subfield 1.1]
+        - [Subfield 1.2]
+        [Field 2]
+        - [Subfield 2.1]
+        - [Subfield 2.2]
+        ...etc.
+        """
+
+        try:
+            response = self.model.generate_content(corpus_prompt)
+            # Parse the response into a structured format
+            fields = {}
+            current_field = None
+            
+            for line in response.text.strip().split('\n'):
+                if line.startswith('-'):
+                    if current_field:
+                        fields[current_field].append(line.replace('-', '').strip())
+                else:
+                    current_field = line.strip()
+                    if current_field and not current_field.startswith('FIELDS:'):
+                        fields[current_field] = []
+                        
+            return fields
+            
+        except Exception as e:
+            logger.error(f"Error analyzing content corpus: {e}")
+            return {}
 
     def _create_combined_prompt(self, title: str, abstract: str) -> str:
         """Create a prompt for both summarization and content type classification."""
