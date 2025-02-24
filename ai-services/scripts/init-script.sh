@@ -4,7 +4,8 @@ set -e
 # Environment setup
 INIT_MARKER="/code/.initialization_complete/init.done"
 LOG_DIR="/code/logs"
-mkdir -p "$LOG_DIR" "/code/.initialization_complete"
+mkdir -p "$LOG_DIR"
+mkdir -p "/code/.initialization_complete"
 
 # Logging setup
 exec 1> >(tee -a "${LOG_DIR}/init.log") 2>&1
@@ -17,7 +18,7 @@ wait_for_service() {
     local port=$3
     local max_attempts=${4:-30}
     local attempt=0
-
+    
     echo "[$(date)] Waiting for $service..."
     until nc -z "$host" "$port" >/dev/null 2>&1; do
         attempt=$((attempt + 1))
@@ -42,15 +43,15 @@ wait_for_services() {
 # Run the Python setup script with environment-based configuration
 run_setup() {
     local setup_args=""
-
+    
     # Build setup arguments from environment variables
-    for flag in DATABASE EXPERTS OPENALEX PUBLICATIONS GRAPH SEARCH REDIS SCRAPING; do
-    skip_var="SKIP_${flag}"  # Construct the dynamic variable name
-    if [ "${!skip_var:-false}" = "true" ]; then  # Use indirect expansion
-        setup_args="$setup_args --skip-${flag,,}"  # Append to setup_args
-    fi
-done
-
+    for flag in DATABASE EXPERTS OPENALEX PUBLICATIONS GRAPH SEARCH REDIS SCRAPING CLASSIFICATION; do
+        skip_var="SKIP_${flag}"  # Construct the dynamic variable name
+        if [ "${!skip_var:-false}" = "true" ]; then  # Use indirect expansion
+            setup_args="$setup_args --skip-${flag,,}"  # Append to setup_args
+        fi
+    done
+    
     echo "[$(date)] Running setup with args: $setup_args"
     if python -m setup $setup_args; then
         return 0
@@ -67,22 +68,22 @@ initialize() {
         echo "[$(date)] System already initialized and healthy"
         return 0
     fi
-
+    
     # Remove marker if it exists but system isn't healthy
     [ -f "$INIT_MARKER" ] && rm "$INIT_MARKER"
-
+    
     # Wait for required services
     if ! wait_for_services; then
         echo "[$(date)] Required services not available"
         return 1
     fi
-
+    
     # Run setup
     if ! run_setup; then
         echo "[$(date)] Setup failed"
         return 1
     fi
-
+    
     # Create initialization marker
     date > "$INIT_MARKER"
     echo "[$(date)] Initialization complete"

@@ -42,6 +42,7 @@ services:
       - SKIP_DATABASE=${SKIP_DATABASE:-false}
       - SKIP_EXPERTS=${SKIP_EXPERTS:-false}
       - SKIP_SCRAPING=${SKIP_SCRAPING:-false}
+      - SKIP_CLASSIFICATION=${SKIP_CLASSIFICATION:-false}
       - SKIP_REDIS=${SKIP_REDIS:-false}
       - CHROME_BIN=/usr/bin/chromium
       - CHROME_BINARY=/usr/bin/chromium

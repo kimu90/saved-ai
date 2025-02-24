@@ -16,8 +16,13 @@ class TextSummarizer:
         """Initialize the TextSummarizer with Gemini model."""
         self.model = self._setup_gemini()
         self.content_types = ["articles", "publications", "blogs", "multimedia"]
+        
+        # Property to store the dynamically generated fields and their subfields
+        # Will be populated after corpus analysis
+        self.corpus_fields = {}
+        self.has_analyzed_corpus = False
+        
         logger.info("TextSummarizer initialized successfully")
-
     def _setup_gemini(self):
         """Set up and configure the Gemini model."""
         try:
@@ -83,7 +88,8 @@ class TextSummarizer:
 
     def classify_field_and_subfield(self, title: str, abstract: str, domains: List[str]) -> Tuple[str, str]:
         """
-        Dynamically classify content by analyzing its themes and patterns.
+        Classify content using the dynamically generated fields from corpus analysis.
+        If corpus analysis hasn't been performed, fall back to dynamic classification.
         
         Args:
             title: Content title
@@ -93,29 +99,51 @@ class TextSummarizer:
         Returns:
             Tuple[str, str]: (field, subfield)
         """
-        prompt = f"""
-        Analyze this academic content and create a natural field classification:
+        # Check if we have analyzed the corpus
+        if self.has_analyzed_corpus and self.corpus_fields:
+            # Format the fields for the prompt
+            fields_list = list(self.corpus_fields.keys())
+            fields_formatted = "\n".join([f"{i+1}. {field}" for i, field in enumerate(fields_list)])
+            
+            prompt = f"""
+            Analyze this academic content and classify it into one of the following fields 
+            that were derived from corpus analysis:
+            
+            {fields_formatted}
+            
+            Title: {title}
+            Abstract: {abstract}
+            Domains: {', '.join(domains)}
+            
+            Instructions:
+            1. Choose ONE of the fields listed above that best matches this content.
+            2. Then, determine a specific subfield that best describes the specialized area within that field.
+            3. The subfield should be specific and meaningful.
+            
+            Return ONLY:
+            FIELD: [one of the fields listed above]
+            SUBFIELD: [specific subfield within that field]
+            """
+        else:
+            # Fall back to the original dynamic classification if corpus analysis hasn't been done
+            prompt = f"""
+            Analyze this academic content and create a natural field classification:
 
-        Title: {title}
-        Abstract: {abstract}
-        Domains: {', '.join(domains)}
+            Title: {title}
+            Abstract: {abstract}
+            Domains: {', '.join(domains)}
 
-        Instructions:
-        1. First, determine the broad field this content belongs to, considering the overall theme and academic discipline.
-        2. Then, determine a more specific subfield that best describes the specialized area within that field.
-        3. The classification should emerge naturally from the content rather than fitting into predefined categories.
-        4. Your field should be broad enough to group similar content but specific enough to be meaningful.
-        5. Your subfield should capture the specific focus area within that field.
+            Instructions:
+            1. First, determine the broad field this content belongs to, considering the overall theme and academic discipline.
+            2. Then, determine a more specific subfield that best describes the specialized area within that field.
+            3. The classification should emerge naturally from the content rather than fitting into predefined categories.
+            4. Your field should be broad enough to group similar content but specific enough to be meaningful.
+            5. Your subfield should capture the specific focus area within that field.
 
-        Return ONLY:
-        FIELD: [naturally derived field]
-        SUBFIELD: [specific subfield within that field]
-
-        For example:
-        For a paper about machine learning in agriculture:
-        FIELD: Agricultural Technology
-        SUBFIELD: AI-Driven Crop Management
-        """
+            Return ONLY:
+            FIELD: [naturally derived field]
+            SUBFIELD: [specific subfield within that field]
+            """
 
         try:
             response = self.model.generate_content(prompt)
@@ -142,13 +170,13 @@ class TextSummarizer:
         
     def analyze_content_corpus(self, publications: List[Dict]) -> Dict[str, List[str]]:
         """
-        Analyze a corpus of publications to identify natural field groupings.
+        Analyze a corpus of publications to identify exactly 5 natural field groupings.
         
         Args:
             publications: List of publication dictionaries with titles, abstracts, etc.
         
         Returns:
-            Dict mapping identified fields to lists of common subfields
+            Dict mapping 5 identified fields to lists of common subfields
         """
         # First truncate and prepare the publications data
         publication_data = [{
@@ -158,26 +186,28 @@ class TextSummarizer:
         } for p in publications[:50]]  # Sample first 50 for analysis
 
         corpus_prompt = f"""
-        Analyze this collection of {len(publications)} academic publications and identify natural groupings:
+        Analyze this collection of {len(publications)} academic publications and identify exactly 5 natural groupings:
 
         Publications:
         {json.dumps(publication_data, indent=2)}
 
         Task:
-        1. Identify the major thematic fields that emerge from this content
-        2. For each field, identify common specialized subfields
-        3. Consider interdisciplinary areas and emerging fields
-        4. Group similar themes while maintaining meaningful distinctions
+        1. Identify EXACTLY 5 major thematic fields that emerge from this content
+        2. Choose fields that are distinct but collectively cover the entire corpus
+        3. For each field, identify 3-5 common specialized subfields
+        4. Consider interdisciplinary areas and emerging fields
 
         Return the classification structure as:
         FIELDS:
         [Field 1]
         - [Subfield 1.1]
         - [Subfield 1.2]
+        - [Subfield 1.3]
         [Field 2]
         - [Subfield 2.1]
         - [Subfield 2.2]
-        ...etc.
+        - [Subfield 2.3]
+        ... and so on for exactly 5 fields
         """
 
         try:
@@ -189,14 +219,31 @@ class TextSummarizer:
             for line in response.text.strip().split('\n'):
                 if line.startswith('-'):
                     if current_field:
-                        fields[current_field].append(line.replace('-', '').strip())
+                        subfield = line.replace('-', '').strip()
+                        if current_field in fields:
+                            fields[current_field].append(subfield)
+                        else:
+                            fields[current_field] = [subfield]
                 else:
-                    current_field = line.strip()
-                    if current_field and not current_field.startswith('FIELDS:'):
-                        fields[current_field] = []
-                        
-            return fields
+                    potential_field = line.strip()
+                    if potential_field and not potential_field.startswith('FIELDS:'):
+                        current_field = potential_field
+                        if current_field not in fields:
+                            fields[current_field] = []
             
+            # Limit to exactly 5 fields if we got more
+            if len(fields) > 5:
+                # Keep only the first 5 fields
+                fields = {k: fields[k] for k in list(fields.keys())[:5]}
+            
+            # Store the fields for future classification
+            self.corpus_fields = fields
+            self.has_analyzed_corpus = True
+            
+            logger.info(f"Corpus analysis complete. Identified {len(fields)} fields: {', '.join(fields.keys())}")
+                            
+            return fields
+                
         except Exception as e:
             logger.error(f"Error analyzing content corpus: {e}")
             return {}

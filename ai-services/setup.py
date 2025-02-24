@@ -46,7 +46,8 @@ class SetupConfig:
     skip_graph: bool = False
     skip_search: bool = False
     skip_redis: bool = False
-    skip_scraping: bool = False  # New flag
+    skip_scraping: bool = False
+    skip_classification: bool = False  # New flag
     expertise_csv: str = ''
     max_workers: int = 4
 
@@ -60,6 +61,7 @@ class SetupConfig:
             skip_search=args.skip_search,
             skip_redis=args.skip_redis,
             skip_scraping=args.skip_scraping,
+            skip_classification=args.skip_classification,  # New line
             expertise_csv=args.expertise_csv,
             max_workers=args.max_workers
         )
@@ -159,26 +161,108 @@ class SystemInitializer:
             logger.error(f"Graph initialization failed: {e}")
             return False
 
+    async def classify_all_publications(self, summarizer: Optional[TextSummarizer] = None) -> None:
+        """
+        Classify all publications after they have been collected from all sources.
+        This function performs corpus analysis to identify 5 natural fields, then
+        classifies all publications according to these fields.
+        
+        Args:
+            summarizer: Optional TextSummarizer instance to use for classification
+        """
+        try:
+            # Create a summarizer if not provided
+            if summarizer is None:
+                summarizer = TextSummarizer()
+                
+            # Skip if classification is disabled
+            if self.config.skip_classification:
+                logger.info("Skipping 5-category corpus classification as requested")
+                return
+                
+            # First, analyze existing publications to establish exactly 5 fields
+            logger.info("Analyzing existing publications for field classification...")
+            existing_publications = self.db.get_all_publications()
+            
+            if not existing_publications:
+                logger.warning("No publications found for corpus analysis. Skipping classification.")
+                return
+                
+            # Perform corpus analysis to identify 5 fields
+            field_structure = summarizer.analyze_content_corpus(existing_publications)
+            logger.info(f"Discovered 5 field structure: {json.dumps(field_structure, indent=2)}")
+            
+            # Classify all publications using the identified fields
+            logger.info("Classifying all publications using the 5-field structure...")
+            
+            # Get all publications that need classification
+            results = self.db.execute("""
+                SELECT id, title, summary, domains, source 
+                FROM resources_resource 
+                WHERE (field IS NULL OR subfield IS NULL)
+            """)
+            
+            if not results:
+                logger.info("No publications found requiring classification.")
+                return
+                
+            # Process each publication
+            total_classified = 0
+            for row in results:
+                try:
+                    publication_id, title, abstract, domains, source = row
+                    
+                    # Classify using the corpus fields
+                    field, subfield = summarizer.classify_field_and_subfield(
+                        title=title,
+                        abstract=abstract or "",
+                        domains=domains if domains else []
+                    )
+                    
+                    # Update the resource with field classification
+                    self.db.execute("""
+                        UPDATE resources_resource 
+                        SET field = %s, subfield = %s
+                        WHERE id = %s
+                    """, (field, subfield, publication_id))
+                    
+                    logger.info(f"Classified {source} publication - {title}: {field}/{subfield}")
+                    total_classified += 1
+                    
+                except Exception as e:
+                    logger.error(f"Error classifying publication {row[1]}: {e}")
+                    continue
+                    
+            logger.info(f"Classification complete! Classified {total_classified} publications.")
+            
+        except Exception as e:
+            logger.error(f"Error in publication classification: {e}")
+            raise
+
     async def process_publications(self, summarizer: Optional[TextSummarizer] = None) -> None:
-        """Process publications from all sources"""
+        """
+        Process publications from all sources without classification.
+        Classification will be performed separately after all sources are processed.
+        
+        Args:
+            summarizer: Optional TextSummarizer instance to use
+        """
         openalex_processor = OpenAlexProcessor()
         publication_processor = PublicationProcessor(openalex_processor.db, TextSummarizer())
         expert_processor = ExpertProcessor(openalex_processor.db, os.getenv('OPENALEX_API_URL'))
 
         try:
-            # First, analyze existing publications to establish fields
-            logger.info("Analyzing existing publications for field classification...")
-            existing_publications = self.db.get_all_publications()
-            field_structure = summarizer.analyze_content_corpus(existing_publications)
-            logger.info(f"Discovered field structure: {json.dumps(field_structure, indent=2)}")
-
+            # Create a single shared summarizer if not provided
+            if summarizer is None:
+                summarizer = TextSummarizer()
+            
             # Process experts' fields and domains using Gemini
             logger.info("Updating experts with OpenAlex data...")
             await openalex_processor.update_experts_with_openalex()
             logger.info("Expert data enrichment complete!")
             
             if not self.config.skip_publications:
-                logger.info("Processing publications data...")
+                logger.info("Processing publications data from all sources...")
                 
                 # Process OpenAlex publications
                 if not self.config.skip_openalex:
@@ -203,6 +287,7 @@ class SystemInitializer:
                     logger.info("Processing KnowHub content...")
                     logger.info("="*50)
                     
+                    # Create KnowHub scraper
                     knowhub_scraper = KnowhubScraper(summarizer=TextSummarizer())
                     all_content = knowhub_scraper.fetch_all_content(limit=2)
                     
@@ -211,25 +296,9 @@ class SystemInitializer:
                             logger.info(f"\nProcessing {len(items)} items from {content_type}")
                             for item in items:
                                 try:
-                                    # Process the publication
+                                    # Process the publication without classification
                                     publication_processor.process_single_work(item, source='knowhub')
                                     logger.info(f"Successfully processed {content_type} item: {item.get('title', 'Unknown Title')}")
-                                    
-                                    # Classify fields
-                                    field, subfield = knowhub_scraper.summarizer.classify_field_and_subfield(
-                                        title=item.get('title', ''),
-                                        abstract=item.get('abstract', ''),
-                                        domains=item.get('domains', [])
-                                    )
-                                    
-                                    # Update classification in database
-                                    knowhub_scraper.db.execute("""
-                                        UPDATE resources_resource 
-                                        SET field = %s, subfield = %s
-                                        WHERE title = %s AND source = 'knowhub'
-                                    """, (field, subfield, item.get('title')))
-                                    
-                                    logger.info(f"Classified {item.get('title')}: {field}/{subfield}")
                                 except Exception as e:
                                     logger.error(f"Error processing {content_type} item: {e}")
                                     continue
@@ -254,24 +323,9 @@ class SystemInitializer:
                     if research_nexus_publications:
                         for pub in research_nexus_publications:
                             try:
-                                # Process the publication
+                                # Process the publication without classification
                                 publication_processor.process_single_work(pub, source='researchnexus')
-                                
-                                # Classify fields
-                                field, subfield = research_nexus_scraper.summarizer.classify_field_and_subfield(
-                                    title=pub.get('title', ''),
-                                    abstract=pub.get('abstract', ''),
-                                    domains=pub.get('domains', [])
-                                )
-                                
-                                # Update classification
-                                research_nexus_scraper.db.execute("""
-                                    UPDATE resources_resource 
-                                    SET field = %s, subfield = %s
-                                    WHERE title = %s AND source = 'researchnexus'
-                                """, (field, subfield, pub.get('title')))
-                                
-                                logger.info(f"Classified {pub.get('title')}: {field}/{subfield}")
+                                logger.info(f"Successfully processed research nexus publication: {pub.get('title', 'Unknown Title')}")
                             except Exception as e:
                                 logger.error(f"Error processing research nexus publication: {e}")
                                 continue
@@ -297,25 +351,9 @@ class SystemInitializer:
                         logger.info(f"\nProcessing {len(website_publications)} website publications")
                         for pub in website_publications:
                             try:
-                                # Process the publication
+                                # Process the publication without classification
                                 publication_processor.process_single_work(pub, source='website')
                                 logger.info(f"Successfully processed website publication: {pub.get('title', 'Unknown Title')}")
-                                
-                                # Classify fields
-                                field, subfield = website_scraper.summarizer.classify_field_and_subfield(
-                                    title=pub.get('title', ''),
-                                    abstract=pub.get('abstract', ''),
-                                    domains=pub.get('domains', [])
-                                )
-                                
-                                # Update classification
-                                website_scraper.db.execute("""
-                                    UPDATE resources_resource 
-                                    SET field = %s, subfield = %s
-                                    WHERE title = %s AND source = 'website'
-                                """, (field, subfield, pub.get('title')))
-                                
-                                logger.info(f"Classified {pub.get('title')}: {field}/{subfield}")
                             except Exception as e:
                                 logger.error(f"Error processing website publication: {e}")
                                 continue
@@ -330,6 +368,8 @@ class SystemInitializer:
                 finally:
                     if 'website_scraper' in locals():
                         website_scraper.close()
+
+                logger.info("Publication processing complete! All sources have been processed.")
 
         except Exception as e:
             logger.error(f"Data processing failed: {e}")
@@ -426,42 +466,11 @@ class SystemInitializer:
             summarizer = TextSummarizer()
             
             if not self.config.skip_publications:
+                # First process all publications from all sources without classification
                 await self.process_publications(summarizer)
                 
-                # After processing publications, classify unclassified content
-                try:
-                    logger.info("Starting field classification for unclassified content...")
-                    # Get unclassified resources
-                    results = self.db.execute("""
-                        SELECT id, title, summary, domains 
-                        FROM resources_resource 
-                        WHERE field IS NULL OR subfield IS NULL
-                    """)
-                    
-                    if results:
-                        for row in results:
-                            try:
-                                field, subfield = summarizer.classify_field_and_subfield(
-                                    title=row[1],
-                                    abstract=row[2] or "",
-                                    domains=row[3] if row[3] else []
-                                )
-                                
-                                # Update the resource with field classification
-                                self.db.execute("""
-                                    UPDATE resources_resource 
-                                    SET field = %s, subfield = %s
-                                    WHERE id = %s
-                                """, (field, subfield, row[0]))
-                                
-                                logger.info(f"Classified resource {row[1]}: {field}/{subfield}")
-                            except Exception as e:
-                                logger.error(f"Error classifying resource {row[1]}: {e}")
-                                continue
-                    
-                    logger.info("Field classification complete!")
-                except Exception as e:
-                    logger.error(f"Error in field classification process: {e}")
+                # Then perform corpus analysis and classify all publications
+                await self.classify_all_publications(summarizer)
             
             if not self.config.skip_graph:
                 graph_success = await self.initialize_graph()
@@ -520,32 +529,33 @@ class SystemInitializer:
             logger.error(f"System initialization failed: {e}")
             raise
 
-
 def parse_arguments() -> argparse.Namespace:
-        parser = argparse.ArgumentParser(description='Initialize and populate the research database.')
-        
-        # Existing arguments
-        parser.add_argument('--skip-database', action='store_true',
-                        help='Skip database initialization')
-        parser.add_argument('--skip-openalex', action='store_true',
-                        help='Skip OpenAlex data enrichment')
-        parser.add_argument('--skip-publications', action='store_true',
-                        help='Skip publication processing')
-        parser.add_argument('--skip-graph', action='store_true',
-                        help='Skip graph database initialization')
-        parser.add_argument('--skip-search', action='store_true',
-                        help='Skip search index creation')
-        parser.add_argument('--skip-redis', action='store_true',
-                        help='Skip Redis index creation')
-        parser.add_argument('--skip-scraping', action='store_true',
-                        help='Skip web content scraping')
-        parser.add_argument('--expertise-csv', type=str, default='',
-                        help='Path to the CSV file containing initial expert data')
-        parser.add_argument('--max-pages', type=int, default=1000,
-                        help='Maximum number of pages to scrape')
-        parser.add_argument('--max-workers', type=int, default=4,
-                        help='Maximum number of worker threads')
-        return parser.parse_args()
+    parser = argparse.ArgumentParser(description='Initialize and populate the research database.')
+    
+    # Existing arguments
+    parser.add_argument('--skip-database', action='store_true',
+                    help='Skip database initialization')
+    parser.add_argument('--skip-openalex', action='store_true',
+                    help='Skip OpenAlex data enrichment')
+    parser.add_argument('--skip-publications', action='store_true',
+                    help='Skip publication processing')
+    parser.add_argument('--skip-graph', action='store_true',
+                    help='Skip graph database initialization')
+    parser.add_argument('--skip-search', action='store_true',
+                    help='Skip search index creation')
+    parser.add_argument('--skip-redis', action='store_true',
+                    help='Skip Redis index creation')
+    parser.add_argument('--skip-scraping', action='store_true',
+                    help='Skip web content scraping')
+    parser.add_argument('--skip-classification', action='store_true',  # New argument
+                    help='Skip the 5-category corpus classification')
+    parser.add_argument('--expertise-csv', type=str, default='',
+                    help='Path to the CSV file containing initial expert data')
+    parser.add_argument('--max-pages', type=int, default=1000,
+                    help='Maximum number of pages to scrape')
+    parser.add_argument('--max-workers', type=int, default=4,
+                    help='Maximum number of worker threads')
+    return parser.parse_args()
 
 async def main() -> None:
     """Main execution function"""
