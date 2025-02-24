@@ -3,6 +3,12 @@ hosts.ini
 cron_logs
 ai-services/.model_cache/
 ai-services/cache/models
+ai-services/ai_services_api/cache/
+ai-services/ai_services_api/.model_cache/
+ai_services_api/.model_cache/
+ai_services_api/cache/
+ai-services/.model_cache/models--sentence-transformers--all-MiniLM-L6-v2/blobs/*
+
 .env*
 .pip
 dist

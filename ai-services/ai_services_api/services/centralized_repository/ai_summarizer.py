@@ -35,8 +35,8 @@ class TextSummarizer:
             raise
 
     @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=4, max=10)
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=4, max=10)
     )
     def summarize(self, title: str, abstract: str) -> Tuple[Optional[str], Optional[str]]:
         """
@@ -54,11 +54,11 @@ class TextSummarizer:
                 logger.error("Title is required for summarization")
                 return ("Cannot generate summary: title is missing", None)
 
+            # Always use the combined prompt
             if not abstract or abstract.strip() == "N/A":
-                logger.info("No abstract available, generating description from title")
-                prompt = self._create_title_only_prompt(title)
-            else:
-                prompt = self._create_combined_prompt(title, abstract)
+                abstract = title  # Use title as content if no abstract available
+                
+            prompt = self._create_combined_prompt(title, abstract)
             
             # Generate summary and classification
             response = self.model.generate_content(prompt)

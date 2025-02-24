@@ -145,8 +145,7 @@ class DatabaseManager:
         authors: List[str] = None,
         domains: List[str] = None,
         publication_year: Optional[int] = None,
-        doi: Optional[str] = None,
-        topics: List[str] = None) -> None:
+        doi: Optional[str] = None) -> None:
         """Add or update a publication in the database."""
         try:
             # Convert authors list to JSON if provided
@@ -160,14 +159,12 @@ class DatabaseManager:
                     type = COALESCE(%s, type),
                     authors = COALESCE(%s, authors),
                     domains = COALESCE(%s, domains),
-                    publication_year = COALESCE(%s, publication_year),
-                    topics = COALESCE(%s, topics)
+                    publication_year = COALESCE(%s, publication_year)
                 WHERE (doi = %s) OR 
                     (title = %s AND source = %s)
                 RETURNING id
             """, (
-                summary, doi, type, authors_json, domains, publication_year, 
-                topics if topics else [], # Pass topics directly as array
+                summary, doi, type, authors_json, domains, publication_year,
                 doi, title, source
             ))
             
@@ -175,11 +172,10 @@ class DatabaseManager:
             if not update_result:
                 self.execute("""
                     INSERT INTO resources_resource 
-                    (doi, title, summary, source, type, authors, domains, publication_year, topics)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    (doi, title, summary, source, type, authors, domains, publication_year)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 """, (
-                    doi, title, summary, source, type, authors_json, domains, 
-                    publication_year, topics if topics else [] # Pass topics directly as array
+                    doi, title, summary, source, type, authors_json, domains, publication_year
                 ))
                 logger.info(f"Added new publication: {title}")
             else:
@@ -187,31 +183,6 @@ class DatabaseManager:
                 
         except Exception as e:
             logger.error(f"Error processing publication '{title}': {e}")
-            raise
-    def update_publication_topics(self, publication_id: str, topics: List[str]) -> None:
-        """
-        Update the topics of a publication.
-        
-        Args:
-            publication_id: ID of the publication
-            topics: List of assigned topic strings
-        """
-        try:
-            # Format topics as PostgreSQL array
-            if not topics:
-                topics_array = '{}'  # Empty PostgreSQL array
-            else:
-                # Escape single quotes and properly format array
-                escaped_topics = [topic.replace("'", "''") for topic in topics]
-                topics_array = '{' + ','.join(f'"{topic}"' for topic in escaped_topics) + '}'
-            
-            self.execute(
-                "UPDATE resources_resource SET topics = %s WHERE id = %s",
-                (topics_array, publication_id)
-            )
-            logger.info(f"Updated topics for publication {publication_id}: {topics}")
-        except Exception as e:
-            logger.error(f"Error updating publication topics: {e}")
             raise
             
     def get_all_publications(self) -> List[Dict]:
@@ -265,7 +236,6 @@ class DatabaseManager:
         except Exception as e:
             logger.error(f"Error retrieving expert {first_name} {last_name}: {e}")
             raise
-
 
     def add_author(self, author_name: str, orcid: Optional[str] = None, author_identifier: Optional[str] = None) -> int:
         """
@@ -342,6 +312,7 @@ class DatabaseManager:
         except Exception as e:
             logger.error(f"Error linking publication {identifier} with author tag {author_id}: {e}")
             raise
+
     def close(self):
         """Close database connection."""
         try:

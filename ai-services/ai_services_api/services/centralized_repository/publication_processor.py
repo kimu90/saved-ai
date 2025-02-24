@@ -25,24 +25,8 @@ class PublicationProcessor:
         self.summarizer = summarizer
         self._setup_database_indexes()
     def _setup_database_indexes(self) -> None:
-        """Create necessary database indexes and tables if they don't exist."""
+        """Create necessary database indexes if they don't exist."""
         try:
-            # First create tables
-            tables = [
-                """
-                ALTER TABLE resources_resource 
-                ADD COLUMN IF NOT EXISTS topics TEXT[]
-                """
-            ]
-            
-            for table_sql in tables:
-                try:
-                    self.db.execute(table_sql)
-                except Exception as e:
-                    logger.error(f"Error creating table modification: {e}")
-                    raise
-
-            # Modify indexes to match existing tables
             indexes = [
                 """
                 CREATE INDEX IF NOT EXISTS idx_resources_doi 
@@ -65,7 +49,7 @@ class PublicationProcessor:
                     logger.error(f"Error creating index: {e}")
                     continue
                     
-            logger.info("Database tables and indexes verified/created successfully")
+            logger.info("Database indexes verified/created successfully")
         except Exception as e:
             logger.error(f"Error setting up database indexes: {e}")
             raise
@@ -216,55 +200,19 @@ class PublicationProcessor:
             # Process abstract for summary generation
             abstract = work.get('abstract', '')
             if not abstract:
-                logger.info("No abstract available, generating description from title")
-                abstract = f"Publication about {title}"
-            
-            # Generate summary and genre based on source
-            try:
-                # For OpenAlex, use title for genre
-                if source == 'openalex':
-                    logger.info(f"Generating genre from title for OpenAlex: {title}")
-                    title_prompt = self.summarizer.create_title_only_prompt(title)
-                    content_to_analyze = title
-                # For other sources, prefer abstract over title for genre
-                else:
-                    if abstract and len(abstract) > 20:  # Use abstract if it's substantial
-                        logger.info(f"Generating genre from abstract for {source}")
-                        title_prompt = self.summarizer.create_title_only_prompt(abstract)
-                        content_to_analyze = abstract
-                    else:
-                        logger.info(f"Generating genre from title for {source}")
-                        title_prompt = self.summarizer.create_title_only_prompt(title)
-                        content_to_analyze = title
+                logger.info("No abstract available, using title")
+                abstract = title
 
-                response = self.summarizer.generate_content(title_prompt)
-                
-                # Extract summary and genre from response
-                summary = None
-                genre = "Academic"  # Default genre
-                
-                for line in response.split('\n'):
-                    if line.startswith('GENRE:'):
-                        genre = line.replace('GENRE:', '').strip()
-                    elif line and not line.startswith('GENRE:'):
-                        summary = line.strip()
-                        
-                # Validate genre is one of our 10 accepted types
-                valid_genres = {
-                    "Academic", "Fiction", "Non-Fiction", "Opinion", 
-                    "News", "Report", "Review", "Analysis", 
-                    "Interview", "Guide"
-                }
-                if genre not in valid_genres:
-                    genre = "Academic"  # Default if we get an unexpected genre
-                    
+            # Generate summary
+            try:
+                summary, content_type = self.summarizer.summarize(title, abstract)
                 if not summary:
                     summary = abstract[:500]
-                    
+                    content_type = 'publications'
             except Exception as e:
-                logger.error(f"Error generating summary and genre: {e}")
+                logger.error(f"Error generating summary: {e}")
                 summary = abstract[:500]
-                genre = "Academic"  # Default if generation fails
+                content_type = 'publications'
             
             # Process authors
             authors = []
@@ -294,11 +242,10 @@ class PublicationProcessor:
                 type=content_type,
                 authors=authors,
                 domains=domains,
-                publication_year=work.get('publication_year'),
-                topics=[genre]  # Use the AI-generated genre as the single topic
+                publication_year=work.get('publication_year')
             )
             
-            logger.info(f"Successfully processed publication: {title} with type: {content_type} and genre: {genre}")
+            logger.info(f"Successfully processed publication: {title} with type: {content_type}")
             return True
             
         except Exception as e:
