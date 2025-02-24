@@ -216,28 +216,56 @@ class MessageHandler:
     
 
     async def record_interaction(self, session_id: str, user_id: str, query: str, response_data: dict):
-        """Record chat interaction with async database."""
+        """Record chat interaction with async database and store sentiment metrics."""
         try:
             async with DatabaseConnector.get_connection() as conn:
-                metrics = response_data.get('metrics', {})
-                
-                await conn.execute("""
-                    INSERT INTO chat_interactions 
-                        (session_id, user_id, query, response, 
-                        response_time, intent_type, intent_confidence)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7)
-                """, 
-                    session_id,
-                    user_id,
-                    query,
-                    response_data.get('response', ''),
-                    metrics.get('response_time', 0.0),
-                    metrics.get('intent', {}).get('type', 'general'),
-                    metrics.get('intent', {}).get('confidence', 0.0)
-                )
-                
+                # Start a transaction
+                async with conn.transaction():
+                    metrics = response_data.get('metrics', {})
+                    
+                    # Insert into chat_interactions table
+                    interaction_result = await conn.fetchrow("""
+                        INSERT INTO chat_interactions 
+                            (session_id, user_id, query, response, 
+                            response_time, intent_type, intent_confidence)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7)
+                        RETURNING id
+                    """, 
+                        session_id,
+                        user_id,
+                        query,
+                        response_data.get('response', ''),
+                        metrics.get('response_time', 0.0),
+                        metrics.get('intent', {}).get('type', 'general'),
+                        metrics.get('intent', {}).get('confidence', 0.0)
+                    )
+                    
+                    # Get the interaction_id from the insert
+                    interaction_id = interaction_result['id']
+                    
+                    # Get sentiment data from metrics
+                    sentiment_data = metrics.get('sentiment', {})
+                    emotion_labels = sentiment_data.get('emotion_labels', [])
+                    
+                    # Insert into sentiment_metrics table
+                    await conn.execute("""
+                        INSERT INTO sentiment_metrics
+                            (interaction_id, sentiment_score, emotion_labels,
+                            satisfaction_score, urgency_score, clarity_score)
+                        VALUES ($1, $2, $3, $4, $5, $6)
+                    """,
+                        interaction_id,
+                        sentiment_data.get('sentiment_score', 0.0),
+                        emotion_labels,
+                        sentiment_data.get('aspects', {}).get('satisfaction', 0.0),
+                        sentiment_data.get('aspects', {}).get('urgency', 0.0),
+                        sentiment_data.get('aspects', {}).get('clarity', 0.0)
+                    )
+                    
+                    logger.info(f"Recorded interaction {interaction_id} with sentiment metrics")
+                    
         except Exception as e:
-            logger.error(f"Error recording interaction: {e}", exc_info=True)
+            logger.error(f"Error recording interaction and sentiment metrics: {e}", exc_info=True)
             raise
 
     async def update_session_stats(self, session_id: str, successful: bool = True):
