@@ -1,6 +1,6 @@
 import os
 import logging
-import aiohttp
+import aiohttp  # type: ignore[import]
 import asyncio
 import uuid
 import time

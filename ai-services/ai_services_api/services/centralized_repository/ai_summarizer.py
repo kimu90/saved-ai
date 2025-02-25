@@ -3,6 +3,8 @@ import logging
 import google.generativeai as genai
 from typing import Optional, List, Dict, Tuple
 from tenacity import retry, stop_after_attempt, wait_exponential
+from ai_services_api.services.centralized_repository.database_manager import DatabaseManager
+
 import json
 logging.basicConfig(
     level=logging.INFO,
@@ -16,6 +18,12 @@ class TextSummarizer:
         """Initialize the TextSummarizer with Gemini model."""
         self.model = self._setup_gemini()
         self.content_types = ["articles", "publications", "blogs", "multimedia"]
+        
+        # Import DatabaseManager here
+        from ai_services_api.services.centralized_repository.database_manager import DatabaseManager
+        
+        # Create a database manager instance
+        self.db = DatabaseManager()
         
         # Property to store the dynamically generated fields and their subfields
         # Will be populated after corpus analysis
@@ -86,136 +94,71 @@ class TextSummarizer:
             logger.error(f"Error in content generation: {e}")
             return ("Failed to generate content due to technical issues", None)
 
-    def classify_field_and_subfield(self, title: str, abstract: str, domains: List[str]) -> Tuple[str, str]:
-        """
-        Classify content using the dynamically generated fields from corpus analysis.
-        If corpus analysis hasn't been performed, fall back to dynamic classification.
-        
-        Args:
-            title: Content title
-            abstract: Content abstract
-            domains: List of domain tags
-            
-        Returns:
-            Tuple[str, str]: (field, subfield)
-        """
-        # Check if we have analyzed the corpus
-        if self.has_analyzed_corpus and self.corpus_fields:
-            # Format the fields for the prompt
-            fields_list = list(self.corpus_fields.keys())
-            fields_formatted = "\n".join([f"{i+1}. {field}" for i, field in enumerate(fields_list)])
-            
-            prompt = f"""
-            Analyze this academic content and classify it into one of the following fields 
-            that were derived from corpus analysis:
-            
-            {fields_formatted}
-            
-            Title: {title}
-            Abstract: {abstract}
-            Domains: {', '.join(domains)}
-            
-            Instructions:
-            1. Choose ONE of the fields listed above that best matches this content.
-            2. Then, determine a specific subfield that best describes the specialized area within that field.
-            3. The subfield should be specific and meaningful.
-            
-            Return ONLY:
-            FIELD: [one of the fields listed above]
-            SUBFIELD: [specific subfield within that field]
-            """
-        else:
-            # Fall back to the original dynamic classification if corpus analysis hasn't been done
-            prompt = f"""
-            Analyze this academic content and create a natural field classification:
-
-            Title: {title}
-            Abstract: {abstract}
-            Domains: {', '.join(domains)}
-
-            Instructions:
-            1. First, determine the broad field this content belongs to, considering the overall theme and academic discipline.
-            2. Then, determine a more specific subfield that best describes the specialized area within that field.
-            3. The classification should emerge naturally from the content rather than fitting into predefined categories.
-            4. Your field should be broad enough to group similar content but specific enough to be meaningful.
-            5. Your subfield should capture the specific focus area within that field.
-
-            Return ONLY:
-            FIELD: [naturally derived field]
-            SUBFIELD: [specific subfield within that field]
-            """
-
-        try:
-            response = self.model.generate_content(prompt)
-            result = response.text.strip()
-            
-            field = None
-            subfield = None
-            
-            for line in result.split('\n'):
-                if line.startswith('FIELD:'):
-                    field = line.replace('FIELD:', '').strip()
-                elif line.startswith('SUBFIELD:'):
-                    subfield = line.replace('SUBFIELD:', '').strip()
-            
-            if field and subfield:
-                return field, subfield
-            else:
-                # Only use this as a last resort if classification fails
-                return "Unclassified", "General"
-                
-        except Exception as e:
-            logger.error(f"Error in field classification: {e}")
-            return "Unclassified", "General"
+    
         
     def analyze_content_corpus(self, publications: List[Dict]) -> Dict[str, List[str]]:
         """
-        Analyze a corpus of publications to identify exactly 5 natural field groupings.
-        
-        Args:
-            publications: List of publication dictionaries with titles, abstracts, etc.
-        
-        Returns:
-            Dict mapping 5 identified fields to lists of common subfields
+        Comprehensive corpus analysis for publication classification.
         """
-        # First truncate and prepare the publications data
+        # First, check existing fields in the database
+        existing_fields = self._check_existing_fields_in_database()
+        
+        if existing_fields:
+            # If existing fields are found, use them
+            logger.info(f"Using existing fields: {list(existing_fields.keys())}")
+            return existing_fields
+        
+        # Prepare publications data for analysis
         publication_data = [{
             'title': p.get('title', ''),
-            'abstract': p.get('abstract', '')[:200],  # Truncate abstract for prompt length
-            'domains': p.get('domains', [])
-        } for p in publications[:50]]  # Sample first 50 for analysis
-
+            'abstract': p.get('abstract', '')[:500],
+            'domains': p.get('domains', []),
+            'keywords': p.get('keywords', [])
+        } for p in publications]
+        
+        # Prompt for generating comprehensive fields with explicit 10-field constraint
         corpus_prompt = f"""
-        Analyze this collection of {len(publications)} academic publications and identify exactly 5 natural groupings:
+        Critically analyze {len(publications)} academic publications and generate a STRICT 10-field classification system.
 
-        Publications:
-        {json.dumps(publication_data, indent=2)}
+        ABSOLUTE REQUIREMENTS:
+        1. GENERATE EXACTLY 10 FIELDS - NO MORE, NO LESS
+        2. Each field must have PRECISELY 4 subfields
+        3. Comprehensively cover ALL publications
+        4. Ensure mutually exclusive yet exhaustive categorization
 
-        Task:
-        1. Identify EXACTLY 5 major thematic fields that emerge from this content
-        2. Choose fields that are distinct but collectively cover the entire corpus
-        3. For each field, identify 3-5 common specialized subfields
-        4. Consider interdisciplinary areas and emerging fields
+        Constraints for Classification:
+        - Cover entire research spectrum
+        - Capture interdisciplinary nuances
+        - Represent diverse academic domains
 
-        Return the classification structure as:
+        Sample Publication Context:
+        {json.dumps([{
+            'title': p.get('title', '')[:100], 
+            'domains': p.get('domains', [])
+        } for p in publication_data[:10]], indent=2)}
+
+        OUTPUT FORMAT (STRICT):
         FIELDS:
         [Field 1]
         - [Subfield 1.1]
         - [Subfield 1.2]
         - [Subfield 1.3]
+        - [Subfield 1.4]
         [Field 2]
         - [Subfield 2.1]
         - [Subfield 2.2]
         - [Subfield 2.3]
-        ... and so on for exactly 5 fields
+        - [Subfield 2.4]
+        ... (continue EXACTLY for 10 fields)
         """
-
+        
         try:
+            # Generate classification using Gemini
             response = self.model.generate_content(corpus_prompt)
-            # Parse the response into a structured format
             fields = {}
             current_field = None
             
+            # Parse the response
             for line in response.text.strip().split('\n'):
                 if line.startswith('-'):
                     if current_field:
@@ -231,21 +174,69 @@ class TextSummarizer:
                         if current_field not in fields:
                             fields[current_field] = []
             
-            # Limit to exactly 5 fields if we got more
-            if len(fields) > 5:
-                # Keep only the first 5 fields
-                fields = {k: fields[k] for k in list(fields.keys())[:5]}
+            # Strict validation
+            if len(fields) != 10:
+                # If more than 10 fields, take first 10
+                if len(fields) > 10:
+                    fields = dict(list(fields.items())[:10])
+                else:
+                    raise ValueError(f"Expected 10 fields, got {len(fields)}")
             
-            # Store the fields for future classification
+            # Ensure exactly 4 subfields per field
+            for field, subfields in fields.items():
+                if len(subfields) > 4:
+                    fields[field] = subfields[:4]
+                elif len(subfields) < 4:
+                    # Pad with generic subfields if needed
+                    while len(fields[field]) < 4:
+                        fields[field].append(f"Generic {len(fields[field])+1} Subfield")
+            
+            # Store and return fields
             self.corpus_fields = fields
             self.has_analyzed_corpus = True
             
-            logger.info(f"Corpus analysis complete. Identified {len(fields)} fields: {', '.join(fields.keys())}")
-                            
+            logger.info(f"Comprehensive corpus analysis complete. Fields: {', '.join(fields.keys())}")
+            
             return fields
-                
+        
         except Exception as e:
-            logger.error(f"Error analyzing content corpus: {e}")
+            logger.error(f"Error in comprehensive corpus analysis: {e}")
+            raise
+
+    def _check_existing_fields_in_database(self) -> Dict[str, List[str]]:
+        """
+        Check if fields and subfields already exist in the database.
+        
+        Returns:
+            Dict of existing fields and their subfields, or empty dict if none found
+        """
+        try:
+            # Query to get distinct fields and their associated subfields
+            query = """
+            SELECT DISTINCT field, subfield 
+            FROM resources_resource 
+            WHERE field IS NOT NULL AND subfield IS NOT NULL
+            """
+            
+            # Use DatabaseManager to execute query
+            results = self.db.execute(query)
+            
+            if not results:
+                return {}
+            
+            # Organize results into a structured dictionary
+            fields = {}
+            for row in results:
+                field, subfield = row
+                if field not in fields:
+                    fields[field] = []
+                if subfield not in fields[field]:
+                    fields[field].append(subfield)
+            
+            return fields
+        
+        except Exception as e:
+            logger.error(f"Error checking existing fields in database: {e}")
             return {}
 
     def _create_combined_prompt(self, title: str, abstract: str) -> str:

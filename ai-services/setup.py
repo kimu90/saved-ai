@@ -3,6 +3,8 @@ System initialization and database setup module.
 """
 import json
 import os
+from typing import List, Dict, Tuple
+
 import sys
 import logging
 import argparse
@@ -162,38 +164,27 @@ class SystemInitializer:
             return False
 
     async def classify_all_publications(self, summarizer: Optional[TextSummarizer] = None) -> None:
-        """
-        Classify all publications after they have been collected from all sources.
-        This function performs corpus analysis to identify 5 natural fields, then
-        classifies all publications according to these fields.
-        
-        Args:
-            summarizer: Optional TextSummarizer instance to use for classification
-        """
         try:
             # Create a summarizer if not provided
             if summarizer is None:
                 summarizer = TextSummarizer()
-                
+            
             # Skip if classification is disabled
             if self.config.skip_classification:
-                logger.info("Skipping 5-category corpus classification as requested")
+                logger.info("Skipping corpus classification as requested")
                 return
-                
-            # First, analyze existing publications to establish exactly 5 fields
+            
+            # First, analyze existing publications
             logger.info("Analyzing existing publications for field classification...")
             existing_publications = self.db.get_all_publications()
             
             if not existing_publications:
                 logger.warning("No publications found for corpus analysis. Skipping classification.")
                 return
-                
-            # Perform corpus analysis to identify 5 fields
-            field_structure = summarizer.analyze_content_corpus(existing_publications)
-            logger.info(f"Discovered 5 field structure: {json.dumps(field_structure, indent=2)}")
             
-            # Classify all publications using the identified fields
-            logger.info("Classifying all publications using the 5-field structure...")
+            # Perform corpus analysis to identify fields
+            field_structure = summarizer.analyze_content_corpus(existing_publications)
+            logger.info(f"Discovered field structure: {json.dumps(field_structure, indent=2)}")
             
             # Get all publications that need classification
             results = self.db.execute("""
@@ -205,18 +196,16 @@ class SystemInitializer:
             if not results:
                 logger.info("No publications found requiring classification.")
                 return
-                
+            
             # Process each publication
             total_classified = 0
             for row in results:
                 try:
                     publication_id, title, abstract, domains, source = row
                     
-                    # Classify using the corpus fields
-                    field, subfield = summarizer.classify_field_and_subfield(
-                        title=title,
-                        abstract=abstract or "",
-                        domains=domains if domains else []
+                    # Directly use the field structure for classification
+                    field, subfield = self._classify_publication(
+                        title, abstract or "", domains or [], field_structure
                     )
                     
                     # Update the resource with field classification
@@ -232,12 +221,40 @@ class SystemInitializer:
                 except Exception as e:
                     logger.error(f"Error classifying publication {row[1]}: {e}")
                     continue
-                    
-            logger.info(f"Classification complete! Classified {total_classified} publications.")
             
+            logger.info(f"Classification complete! Classified {total_classified} publications.")
+        
         except Exception as e:
             logger.error(f"Error in publication classification: {e}")
             raise
+
+    def _classify_publication(self, title: str, abstract: str, domains: List[str], field_structure: Dict) -> Tuple[str, str]:
+        """
+        Classify a single publication based on the generated field structure.
+        
+        Args:
+            title: Publication title
+            abstract: Publication abstract
+            domains: Publication domains
+            field_structure: Generated field structure from corpus analysis
+        
+        Returns:
+            Tuple of (field, subfield)
+        """
+        # If no field structure, fallback to a generic classification
+        if not field_structure:
+            return "Unclassified", "General"
+        
+        # Simple classification logic
+        # You might want to replace this with a more sophisticated method
+        for field, subfields in field_structure.items():
+            # Basic matching logic (can be made more complex)
+            if any(keyword.lower() in (title + " " + abstract).lower() for keyword in subfields):
+                return field, subfields[0]
+        
+        # If no match found, return the first field and its first subfield
+        first_field = list(field_structure.keys())[0]
+        return first_field, field_structure[first_field][0]
 
     async def process_publications(self, summarizer: Optional[TextSummarizer] = None) -> None:
         """
@@ -489,39 +506,6 @@ class SystemInitializer:
                     max_workers=self.config.max_workers,
                 )
                 await web_processor.process_content()
-                
-                # Classify any new web content
-                try:
-                    logger.info("Classifying new web content...")
-                    results = self.db.execute("""
-                        SELECT id, title, summary, domains 
-                        FROM resources_resource 
-                        WHERE source = 'web' AND (field IS NULL OR subfield IS NULL)
-                    """)
-                    
-                    if results:
-                        for row in results:
-                            try:
-                                field, subfield = summarizer.classify_field_and_subfield(
-                                    title=row[1],
-                                    abstract=row[2] or "",
-                                    domains=row[3] if row[3] else []
-                                )
-                                
-                                self.db.execute("""
-                                    UPDATE resources_resource 
-                                    SET field = %s, subfield = %s
-                                    WHERE id = %s
-                                """, (field, subfield, row[0]))
-                                
-                                logger.info(f"Classified web content {row[1]}: {field}/{subfield}")
-                            except Exception as e:
-                                logger.error(f"Error classifying web content {row[1]}: {e}")
-                                continue
-                                
-                    logger.info("Web content classification complete!")
-                except Exception as e:
-                    logger.error(f"Error in web content classification: {e}")
             
             logger.info("System initialization completed successfully!")
                 

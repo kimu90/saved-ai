@@ -96,24 +96,24 @@ RUN chown root:root /usr/bin/chromium && \
 
 # Directory Structure with Updated Permissions
 RUN mkdir -p \
-    /code/ai_services_api/services/search/models \
-    /code/logs \
-    /code/cache \
+    /app/ai_services_api/services/search/models \
+    /app/logs \
+    /app/cache \
     /opt/airflow/logs \
     /opt/airflow/dags \
     /opt/airflow/plugins \
     /opt/airflow/data \
-    /code/scripts \
-    /code/tests && \
+    /app/scripts \
+    /app/tests && \
     # Enhanced permissions for FAISS index directory
-    chmod -R 777 /code/ai_services_api/services/search/models && \
-    chmod -R 777 /code/ai_services_api/services/search && \
+    chmod -R 777 /app/ai_services_api/services/search/models && \
+    chmod -R 777 /app/ai_services_api/services/search && \
     # General permissions for other directories
-    chown -R 1001:125 /code /opt/airflow && \
-    chmod -R 775 /code /opt/airflow
+    chown -R 1001:125 /app /opt/airflow && \
+    chmod -R 775 /app /opt/airflow
 
 # Working Directory
-WORKDIR /code
+WORKDIR /app
 
 # Copy Dependencies
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
@@ -121,18 +121,18 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Application Files with updated permissions
 COPY --chown=1001:125 . .
-RUN chmod +x /code/scripts/init-script.sh && \
+RUN chmod +x /app/scripts/init-script.sh && \
     # Ensure FAISS directory permissions persist after copy
-    chmod -R 777 /code/ai_services_api/services/search/models
+    chmod -R 777 /app/ai_services_api/services/search/models
 
 # Set Chrome flags
 ENV CHROME_FLAGS="--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --disable-crashpad --disable-crash-reporter --no-first-run --test-type --disable-software-rasterizer --disable-default-apps --disable-setuid-sandbox --remote-debugging-port=9222"
 
 # Environment Variables
-ENV TRANSFORMERS_CACHE=/code/cache \
-    HF_HOME=/code/cache \
+ENV TRANSFORMERS_CACHE=/app/cache \
+    HF_HOME=/app/cache \
     AIRFLOW_HOME=/opt/airflow \
-    PYTHONPATH=/code \
+    PYTHONPATH=/app \
     TESTING=false \
     CHROME_BIN=/usr/bin/chromium \
     CHROMEDRIVER_PATH=/usr/bin/chromedriver \

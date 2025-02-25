@@ -135,6 +135,16 @@ class SchemaManager:
                         FOREIGN KEY (session_id) REFERENCES chat_sessions(session_id)
                     )
                 """,
+                'chatbot_logs': """
+                    CREATE TABLE IF NOT EXISTS chatbot_logs (
+                        id SERIAL PRIMARY KEY,
+                        user_id VARCHAR(255) NOT NULL,
+                        query TEXT NOT NULL,
+                        response TEXT NOT NULL,
+                        response_time FLOAT NOT NULL,
+                        timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                    )
+                """,
                 'response_quality_metrics': """
                     CREATE TABLE IF NOT EXISTS response_quality_metrics (
                         id SERIAL PRIMARY KEY,
@@ -256,17 +266,8 @@ class SchemaManager:
                         FOREIGN KEY (resource_id) REFERENCES resources_resource(id) ON DELETE CASCADE,
                         UNIQUE(expert_id, resource_id)
                     )
-                """,
-                'chatbot_logs': """
-                    CREATE TABLE IF NOT EXISTS chatbot_logs (
-                        id SERIAL PRIMARY KEY,
-                        user_id VARCHAR(255) NOT NULL,
-                        query TEXT NOT NULL,
-                        response TEXT NOT NULL,
-                        response_time FLOAT NOT NULL,
-                        timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-                    )
                 """
+                
             },
             'analytics_tables': {
                 'search_sessions': """

@@ -7,13 +7,13 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    command: bash /code/scripts/init-script.sh
+    command: bash /app/scripts/init-script.sh
     volumes:
-      - ./:/code:rw
-      - ./logs/api:/code/logs:rw
-      - ./ai_services_api/services/search/models:/code/ai_services_api/services/search/models:rw
-      - ./cache:/code/cache:rw
-      - ./scripts/init-script.sh:/code/scripts/init-script.sh:ro
+      - ./:/app:rw
+      - ./logs/api:/app/logs:rw
+      - ./ai_services_api/services/search/models:/app/ai_services_api/services/search/models:rw
+      - ./cache:/app/cache:rw
+      - ./scripts/init-script.sh:/app/scripts/init-script.sh:ro
       - /dev/shm:/dev/shm:rw
       - chrome_data:/tmp/chrome-data
       - chrome_profile:/tmp/chrome-profile
@@ -31,10 +31,10 @@ services:
       - NEO4J_PASSWORD=${NEO4J_PASSWORD:-password123456789!}
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}
       - DOCKER_ENV=true
-      - TRANSFORMERS_CACHE=/code/cache
-      - HF_HOME=/code/cache
-      - MODEL_PATH=/code/models/search
-      - BASE_DIR=/code
+      - TRANSFORMERS_CACHE=/app/cache
+      - HF_HOME=/app/cache
+      - MODEL_PATH=/app/models/search
+      - BASE_DIR=/app
       - SKIP_OPENALEX=${SKIP_OPENALEX:-false}
       - SKIP_PUBLICATIONS=${SKIP_PUBLICATIONS:-false}
       - SKIP_GRAPH=${SKIP_GRAPH:-false}
@@ -199,10 +199,10 @@ services:
     build: . 
     ports:
       - "8501:8501"
-    command: streamlit run /code/ai_services_api/services/analytics/app.py --server.headless true
+    command: streamlit run /app/ai_services_api/services/analytics/app.py --server.headless true
     volumes:
-      - ./:/code:rw
-      - ./logs/dashboard:/code/logs:rw
+      - ./:/app:rw
+      - ./logs/dashboard:/app/logs:rw
     environment: 
       - POSTGRES_HOST=postgres
       - POSTGRES_DB=${POSTGRES_DB:-aphrc}
@@ -240,12 +240,12 @@ services:
       - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW__WEBSERVER__SECRET_KEY=${AIRFLOW__WEBSERVER__SECRET_KEY}
       - AIRFLOW_HOME=/opt/airflow
-      - PYTHONPATH=/code
+      - PYTHONPATH=/app
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
-      - ./:/code:ro
+      - ./:/app:ro
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
       interval: 30s
@@ -280,12 +280,12 @@ services:
       - AIRFLOW__SMTP__SMTP_PORT=587
       - AIRFLOW__SMTP__SMTP_MAIL_FROM=briankimu97@gmail.com
       - AIRFLOW__EMAIL__EMAIL_BACKEND=airflow.utils.email.send_email_smtp
-      - PYTHONPATH=/code
+      - PYTHONPATH=/app
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
-      - ./:/code:ro
+      - ./:/app:ro
     depends_on:
       - airflow-webserver
     networks:
@@ -311,12 +311,12 @@ services:
       - AIRFLOW__SMTP__SMTP_PORT=587
       - AIRFLOW__SMTP__SMTP_MAIL_FROM=briankimu97@gmail.com
       - AIRFLOW__EMAIL__EMAIL_BACKEND=airflow.utils.email.send_email_smtp
-      - PYTHONPATH=/code
+      - PYTHONPATH=/app
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
       - ./airflow/plugins:/opt/airflow/plugins
-      - ./:/code:rw
+      - ./:/app:rw
     depends_on:
       - airflow-scheduler
     networks:
