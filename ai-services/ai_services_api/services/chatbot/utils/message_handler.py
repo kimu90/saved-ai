@@ -2,11 +2,13 @@ import asyncio
 import logging
 import time
 from typing import AsyncIterable, Optional, Dict
+from datetime import datetime
 from .llm_manager import GeminiLLMManager
 from ai_services_api.services.message.core.database import get_db_connection
 import asyncio
 from typing import Dict, Any, AsyncGenerator
 from ai_services_api.services.chatbot.utils.db_utils import DatabaseConnector
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -88,34 +90,44 @@ class MessageHandler:
             response_stream: Async generator of response chunks
             
         Yields:
-            str: Cleaned and formatted response chunks
+            str or dict: Cleaned and formatted response chunks or metadata
         """
         buffer = ""
+        metadata = None
+        
         async for chunk in response_stream:
+            # Capture metadata if present but continue processing
             if isinstance(chunk, dict) and chunk.get('is_metadata'):
+                metadata = chunk
+                # Store metadata for later use
+                self.metadata = chunk
                 continue
-                
+                    
             if isinstance(chunk, dict) and 'chunk' in chunk:
                 text = chunk['chunk']
             elif isinstance(chunk, (str, bytes)):
                 text = chunk.decode('utf-8') if isinstance(chunk, bytes) else chunk
             else:
                 continue
-                
+                    
             buffer += text
-            
+                
             # Process complete sentences
             while '.' in buffer:
                 split_idx = buffer.find('.') + 1
                 sentence = self.clean_response_text(buffer[:split_idx])
                 buffer = buffer[split_idx:].lstrip()
-                
+                    
                 if sentence.strip():
                     yield sentence
-        
+            
         # Handle remaining buffer
         if buffer.strip():
             yield self.clean_response_text(buffer)
+                
+        # After yielding all text chunks, yield the metadata if it exists
+        if metadata:
+            yield metadata
 
     async def send_message_async(self, message: str, user_id: str, session_id: str = None):
         """
@@ -139,12 +151,19 @@ class MessageHandler:
             
             # Initialize response tracking
             response_chunks = []
+            captured_metadata = None
             
             # Process and format the response stream
-            async for formatted_chunk in self.process_stream_response(raw_response_stream):
-                logger.debug(f"Yielding formatted response chunk (length: {len(formatted_chunk)})")
-                response_chunks.append(formatted_chunk)
-                yield formatted_chunk
+            async for chunk in self.process_stream_response(raw_response_stream):
+                # Check if this is a metadata chunk
+                if isinstance(chunk, dict) and chunk.get('is_metadata'):
+                    captured_metadata = chunk['metadata']
+                    logger.debug(f"Captured metadata: {json.dumps(captured_metadata, default=str)}")
+                    continue
+                    
+                logger.debug(f"Yielding formatted response chunk (length: {len(chunk)})")
+                response_chunks.append(chunk)
+                yield chunk
             
             # Prepare complete response
             complete_response = ''.join(response_chunks)
@@ -156,17 +175,29 @@ class MessageHandler:
             # Save chat to database
             await self.save_chat_to_db(user_id, message, complete_response, response_time)
             
-            # Get sentiment data from LLM
-            sentiment_data = await self.llm_manager.analyze_sentiment(message)
-            
-            # Record interaction with sentiment metrics
-            await self.record_interaction(session_id, user_id, message, {
-                'response': complete_response,
-                'metrics': {
-                    'response_time': response_time,
-                    'sentiment': sentiment_data
+            # Prepare response data with either captured metadata or fallback to sentiment
+            if captured_metadata and 'metrics' in captured_metadata:
+                # Use the quality metrics from the LLM's response
+                response_data = {
+                    'response': complete_response,
+                    'timestamp': captured_metadata.get('timestamp', datetime.utcnow().isoformat()),
+                    'metrics': captured_metadata['metrics']
                 }
-            })
+                logger.debug("Using quality metrics from LLM metadata")
+            else:
+                # Fallback to sentiment analysis if no metadata was captured
+                logger.warning("No metadata captured, falling back to sentiment analysis")
+                sentiment_data = await self.llm_manager.analyze_sentiment(message)
+                response_data = {
+                    'response': complete_response,
+                    'metrics': {
+                        'response_time': response_time,
+                        'sentiment': sentiment_data
+                    }
+                }
+            
+            # Record interaction with metrics
+            await self.record_interaction(session_id, user_id, message, response_data)
             
         except Exception as e:
             logger.error("Critical error in message stream processing", exc_info=True)
@@ -236,13 +267,28 @@ class MessageHandler:
 
     
     async def record_interaction(self, session_id: str, user_id: str, query: str, response_data: dict):
+        """
+        Record response quality metrics for a chat interaction.
+        
+        Args:
+            session_id (str): Unique identifier for the conversation session
+            user_id (str): Unique identifier for the user
+            query (str): The user's message
+            response_data (dict): Contains response and metrics data
+        """
         try:
+            # Log the entire response_data dictionary to see what's being received
+            logger.debug(f"Full response_data received in record_interaction: {json.dumps(response_data, default=str)}")
+            
             async with DatabaseConnector.get_connection() as conn:
                 # Start a transaction
                 async with conn.transaction():
                     metrics = response_data.get('metrics', {})
                     
-                    # Get the chat_log_id from the chatbot_logs table
+                    # Log the entire metrics dictionary
+                    logger.debug(f"Full metrics dictionary: {json.dumps(metrics, default=str)}")
+                    
+                    # Get the chat log id from the chatbot_logs table
                     chat_log_result = await conn.fetchrow("""
                         SELECT id FROM chatbot_logs 
                         WHERE user_id = $1 AND query = $2 
@@ -251,34 +297,69 @@ class MessageHandler:
                     """, user_id, query)
                     
                     if not chat_log_result:
-                        logger.warning("Corresponding chat log not found for sentiment metrics")
+                        logger.warning("Corresponding chat log not found for response quality metrics")
+                        logger.debug(f"Query parameters - user_id: {user_id}, query: {query}")
                         return
                     
-                    chat_log_id = chat_log_result['id']
+                    log_id = chat_log_result['id']
                     
-                    # Get sentiment data from metrics
-                    sentiment_data = metrics.get('sentiment', {})
-                    emotion_labels = sentiment_data.get('emotion_labels', [])
+                    # Get response quality data from metrics
+                    quality_data = metrics.get('quality', {})
                     
-                    # Insert into sentiment_metrics table
+                    # Log the extracted quality_data
+                    logger.debug(f"Extracted quality_data: {json.dumps(quality_data, default=str)}")
+                    
+                    # Check if quality data is in a different location as fallback
+                    if not quality_data and 'sentiment' in metrics:
+                        logger.warning("No quality data found, checking sentiment data as fallback")
+                        quality_data = metrics.get('sentiment', {})
+                        logger.debug(f"Using sentiment data instead: {json.dumps(quality_data, default=str)}")
+                    
+                    # Log the data we're about to insert
+                    logger.debug(f"Attempting to insert response quality metrics with: log_id={log_id}, "
+                                f"helpfulness_score={quality_data.get('helpfulness_score', 0.0)}, "
+                                f"hallucination_risk={quality_data.get('hallucination_risk', 0.0)}, "
+                                f"factual_grounding_score={quality_data.get('factual_grounding_score', 0.0)}")
+                    
+                    # Extract values with explicit logging of each
+                    helpfulness_score = quality_data.get('helpfulness_score', 0.0)
+                    logger.debug(f"Extracted helpfulness_score: {helpfulness_score}")
+                    
+                    hallucination_risk = quality_data.get('hallucination_risk', 0.0)
+                    logger.debug(f"Extracted hallucination_risk: {hallucination_risk}")
+                    
+                    factual_grounding_score = quality_data.get('factual_grounding_score', 0.0)
+                    logger.debug(f"Extracted factual_grounding_score: {factual_grounding_score}")
+                    
+                    unclear_elements = quality_data.get('unclear_elements', [])
+                    logger.debug(f"Extracted unclear_elements: {unclear_elements}")
+                    
+                    potentially_fabricated_elements = quality_data.get('potentially_fabricated_elements', [])
+                    logger.debug(f"Extracted potentially_fabricated_elements: {potentially_fabricated_elements}")
+                    
+                    # Insert into response_quality_metrics table
                     await conn.execute("""
-                        INSERT INTO sentiment_metrics
-                            (chatbot_log_id, sentiment_score, emotion_labels,
-                            satisfaction_score, urgency_score, clarity_score)
+                        INSERT INTO response_quality_metrics
+                            (interaction_id, helpfulness_score, hallucination_risk, 
+                            factual_grounding_score, unclear_elements, potentially_fabricated_elements)
                         VALUES ($1, $2, $3, $4, $5, $6)
                     """,
-                        chat_log_id,
-                        sentiment_data.get('sentiment_score', 0.0),
-                        emotion_labels,
-                        sentiment_data.get('aspects', {}).get('satisfaction', 0.0),
-                        sentiment_data.get('aspects', {}).get('urgency', 0.0),
-                        sentiment_data.get('aspects', {}).get('clarity', 0.0)
+                        log_id,  # Using chatbot_logs.id instead of interaction_id
+                        helpfulness_score,
+                        hallucination_risk,
+                        factual_grounding_score,
+                        unclear_elements,
+                        potentially_fabricated_elements
                     )
                     
-                    logger.info(f"Recorded sentiment metrics for chat log ID: {chat_log_id}")
-                    
+                    logger.info(f"Recorded response quality metrics for chat log ID: {log_id}")
+                    logger.info(f"Inserted values - helpfulness: {helpfulness_score}, hallucination: {hallucination_risk}, factual: {factual_grounding_score}")
+        
         except Exception as e:
-            logger.error(f"Error recording interaction and sentiment metrics: {e}", exc_info=True)
+            logger.error(f"Error recording interaction quality metrics: {e}", exc_info=True)
+            # Printing the full exception for debugging
+            import traceback
+            logger.error(f"Detailed traceback: {traceback.format_exc()}")
             raise
 
     async def update_session_stats(self, session_id: str, successful: bool = True):

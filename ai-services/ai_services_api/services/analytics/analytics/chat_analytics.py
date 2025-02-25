@@ -49,20 +49,20 @@ async def get_daily_metrics(conn, start_date, end_date):
     finally:
         cursor.close()
 
-async def get_sentiment_trends(conn, start_date, end_date):
-    """Get sentiment metrics from sentiment_metrics and chatbot_logs."""
+async def get_quality_metrics_trends(conn, start_date, end_date):
+    """Get quality metrics from response_quality_metrics and chatbot_logs."""
     cursor = conn.cursor()
     try:
         cursor.execute("""
             SELECT 
                 DATE(cl.timestamp) as date,
-                AVG(sm.sentiment_score) as avg_sentiment,
-                AVG(sm.satisfaction_score) as avg_satisfaction,
-                AVG(sm.urgency_score) as avg_urgency,
-                AVG(sm.clarity_score) as avg_clarity,
-                COUNT(*) as total_interactions
+                AVG(rqm.helpfulness_score) as avg_helpfulness,
+                AVG(rqm.hallucination_risk) as avg_hallucination_risk,
+                AVG(rqm.factual_grounding_score) as avg_factual_grounding,
+                COUNT(*) as total_interactions,
+                COUNT(CASE WHEN rqm.helpfulness_score >= 0.7 THEN 1 END)::float / COUNT(*) as high_quality_ratio
             FROM chatbot_logs cl
-            JOIN sentiment_metrics sm ON cl.id = sm.interaction_id
+            JOIN response_quality_metrics rqm ON cl.id = rqm.interaction_id
             WHERE cl.timestamp BETWEEN %s AND %s
             GROUP BY DATE(cl.timestamp)
             ORDER BY date
@@ -80,15 +80,15 @@ def get_chat_metrics(conn, start_date, end_date):
     """
     async def get_metrics_async():
         # Gather metrics concurrently
-        daily_metrics, sentiment_metrics = await asyncio.gather(
+        daily_metrics, quality_metrics = await asyncio.gather(
             get_daily_metrics(conn, start_date, end_date),
-            get_sentiment_trends(conn, start_date, end_date)
+            get_quality_metrics_trends(conn, start_date, end_date)
         )
         
-        # Merge daily and sentiment metrics on date
+        # Merge daily and quality metrics on date
         metrics = pd.merge(
             daily_metrics,
-            sentiment_metrics,
+            quality_metrics,
             on='date',
             how='left'
         )
@@ -134,8 +134,9 @@ def display_chat_analytics(metrics_df, filters):
             st.metric("Avg Response Time", f"{avg_response:.2f}s")
         
         with col3:
-            avg_sentiment = metrics_df['avg_sentiment'].mean()
-            st.metric("Avg Sentiment", f"{avg_sentiment:.2f}")
+            # Changed from sentiment to helpfulness
+            avg_helpfulness = metrics_df['avg_helpfulness'].mean() if 'avg_helpfulness' in metrics_df.columns else 0
+            st.metric("Avg Helpfulness", f"{avg_helpfulness:.2f}")
         
         with col4:
             total_sessions = metrics_df['total_sessions'].sum()
@@ -212,45 +213,62 @@ def display_chat_analytics(metrics_df, filters):
         response_fig.update_layout(title="Average Response Time")
         st.plotly_chart(response_fig)
 
-        # Sentiment Analysis
-        if 'avg_sentiment' in metrics_df.columns:
-            st.subheader("Sentiment Analysis")
-            sentiment_fig = go.Figure()
+        # Quality Metrics Analysis (replacing Sentiment Analysis)
+        if 'avg_helpfulness' in metrics_df.columns:
+            st.subheader("Response Quality Analysis")
+            quality_fig = go.Figure()
             
-            # Sentiment Score
-            sentiment_fig.add_trace(go.Scatter(
+            # Helpfulness Score
+            quality_fig.add_trace(go.Scatter(
                 x=metrics_df['date'],
-                y=metrics_df['avg_sentiment'],
+                y=metrics_df['avg_helpfulness'],
                 mode='lines',
-                name='Avg Sentiment',
+                name='Avg Helpfulness',
                 yaxis='y1'
             ))
             
-            # Satisfaction Score
-            sentiment_fig.add_trace(go.Scatter(
+            # Hallucination Risk
+            quality_fig.add_trace(go.Scatter(
                 x=metrics_df['date'],
-                y=metrics_df['avg_satisfaction'],
+                y=metrics_df['avg_hallucination_risk'],
                 mode='lines',
-                name='Avg Satisfaction',
+                name='Avg Hallucination Risk',
                 yaxis='y2'
             ))
             
-            # Clarity Score
-            sentiment_fig.add_trace(go.Scatter(
+            # Factual Grounding Score
+            quality_fig.add_trace(go.Scatter(
                 x=metrics_df['date'],
-                y=metrics_df['avg_clarity'],
+                y=metrics_df['avg_factual_grounding'],
                 mode='lines',
-                name='Avg Clarity',
+                name='Avg Factual Grounding',
                 yaxis='y3'
             ))
             
-            sentiment_fig.update_layout(
-                title="Sentiment Trends",
-                yaxis=dict(title='Sentiment'),
-                yaxis2=dict(title='Satisfaction', overlaying='y', side='right'),
-                yaxis3=dict(title='Clarity', overlaying='y', side='right', anchor='free', position=1)
+            quality_fig.update_layout(
+                title="Response Quality Trends",
+                yaxis=dict(title='Helpfulness'),
+                yaxis2=dict(title='Hallucination Risk', overlaying='y', side='right'),
+                yaxis3=dict(title='Factual Grounding', overlaying='y', side='right', anchor='free', position=1)
             )
-            st.plotly_chart(sentiment_fig)
+            st.plotly_chart(quality_fig)
+            
+            # Add High Quality Responses ratio chart if available
+            if 'high_quality_ratio' in metrics_df.columns:
+                quality_ratio_fig = go.Figure(
+                    data=go.Scatter(
+                        x=metrics_df['date'], 
+                        y=metrics_df['high_quality_ratio'] * 100, 
+                        mode='lines', 
+                        fill='tozeroy',
+                        name='High Quality Responses (%)'
+                    )
+                )
+                quality_ratio_fig.update_layout(
+                    title="Percentage of High Quality Responses (Helpfulness ≥ 0.7)",
+                    yaxis=dict(title='Percentage (%)', range=[0, 100])
+                )
+                st.plotly_chart(quality_ratio_fig)
 
         # Add date/time of last update
         st.markdown(f"*Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*")

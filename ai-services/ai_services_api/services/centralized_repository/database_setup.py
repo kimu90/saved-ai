@@ -135,16 +135,16 @@ class SchemaManager:
                         FOREIGN KEY (session_id) REFERENCES chat_sessions(session_id)
                     )
                 """,
-                'sentiment_metrics': """
-                    CREATE TABLE IF NOT EXISTS sentiment_metrics (
+                'response_quality_metrics': """
+                    CREATE TABLE IF NOT EXISTS response_quality_metrics (
                         id SERIAL PRIMARY KEY,
                         interaction_id INTEGER NOT NULL,
-                        sentiment_score FLOAT,
-                        emotion_labels TEXT[],
-                        satisfaction_score FLOAT,
-                        urgency_score FLOAT,
-                        clarity_score FLOAT,
-                        FOREIGN KEY (interaction_id) REFERENCES chat_interactions(id)
+                        helpfulness_score FLOAT,
+                        hallucination_risk FLOAT,
+                        factual_grounding_score FLOAT,
+                        unclear_elements TEXT[],
+                        potentially_fabricated_elements TEXT[],
+                        FOREIGN KEY (interaction_id) REFERENCES chatbot_logs(id)
                     )
                 """,
                 'chat_analytics': """
@@ -412,6 +412,9 @@ class SchemaManager:
             # Chat session indexes
             "CREATE INDEX IF NOT EXISTS idx_chat_sessions_user ON chat_sessions(user_id)",
             "CREATE INDEX IF NOT EXISTS idx_chat_sessions_timestamp ON chat_sessions(start_timestamp)",
+            
+            # response quality
+            "CREATE INDEX IF NOT EXISTS idx_response_quality_interaction_id ON response_quality_metrics(interaction_id)",
             
             # Chat interaction indexes
             "CREATE INDEX IF NOT EXISTS idx_chat_interactions_session ON chat_interactions(session_id)",

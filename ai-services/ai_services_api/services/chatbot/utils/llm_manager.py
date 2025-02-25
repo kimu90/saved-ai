@@ -108,55 +108,105 @@ class GeminiLLMManager:
             top_k=40,
         )
 
-    async def analyze_sentiment(self, message: str) -> Dict:
-        """Analyze sentiment of a message using Gemini model."""
+    async def analyze_quality(self, message: str, response: str = "") -> Dict:
+        """
+        Analyze the quality of a response in terms of helpfulness, factual accuracy, and potential hallucination.
+        
+        Args:
+            message (str): The user's original query
+            response (str): The chatbot's response to analyze (if available)
+        
+        Returns:
+            Dict: Quality metrics including helpfulness, hallucination risk, and factual grounding
+        """
         try:
-            prompt = """Analyze the sentiment of this message and return a JSON object. 
-            Return ONLY the JSON object with no markdown formatting, no code blocks, and no additional text.
-            
-            Required format:
-            {
-                "sentiment_score": <float between -1 and 1>,
-                "emotion_labels": [<array of emotion strings>],
-                "confidence": <float between 0 and 1>,
-                "aspects": {
-                    "satisfaction": <float between 0 and 1>,
-                    "urgency": <float between 0 and 1>,
-                    "clarity": <float between 0 and 1>
-                }
-            }
-            Message to analyze: """ + message
+            # If no response provided, we can only analyze the query
+            if not response:
+                prompt = f"""Analyze this query for an APHRC chatbot and return a JSON object with quality expectations.
+                The chatbot helps users find publications and navigate APHRC resources.
+                Return ONLY the JSON object with no markdown formatting, no code blocks, and no additional text.
+                
+                Required format:
+                {{
+                    "helpfulness_score": <float between 0 and 1, representing expected helpfulness>,
+                    "hallucination_risk": <float between 0 and 1, representing risk based on query complexity>,
+                    "factual_grounding_score": <float between 0 and 1, representing how much factual knowledge is needed>,
+                    "unclear_elements": [<array of strings representing potential unclear aspects of the query>],
+                    "potentially_fabricated_elements": []
+                }}
+                
+                Query to analyze: {message}
+                """
+            else:
+                # If we have both query and response, analyze the response quality
+                prompt = f"""Analyze the quality of this chatbot response for the given query and return a JSON object.
+                The APHRC chatbot helps users find publications and navigate APHRC resources.
+                Evaluate helpfulness, factual accuracy, and potential hallucination.
+                Return ONLY the JSON object with no markdown formatting, no code blocks, and no additional text.
+                
+                Required format:
+                {{
+                    "helpfulness_score": <float between 0 and 1>,
+                    "hallucination_risk": <float between 0 and 1>,
+                    "factual_grounding_score": <float between 0 and 1>,
+                    "unclear_elements": [<array of strings representing unclear aspects of the response>],
+                    "potentially_fabricated_elements": [<array of strings representing statements that may be hallucinated>]
+                }}
+                
+                User query: {message}
+                
+                Chatbot response: {response}
+                """
             
             response = await self.get_gemini_model().ainvoke(prompt)
             cleaned_response = response.content.strip()
             cleaned_response = cleaned_response.replace('```json', '').replace('```', '').strip()
             
             try:
-                sentiment_data = json.loads(cleaned_response)
-                logger.info(f"Sentiment analysis result: {sentiment_data}")
-                return sentiment_data
+                quality_data = json.loads(cleaned_response)
+                logger.info(f"Response quality analysis result: {quality_data}")
+                return quality_data
             except json.JSONDecodeError as e:
-                logger.error(f"Failed to parse sentiment analysis response: {cleaned_response}")
+                logger.error(f"Failed to parse quality analysis response: {cleaned_response}")
                 logger.error(f"JSON parse error: {e}")
-                return self._get_default_sentiment()
+                return self._get_default_quality()
                 
         except Exception as e:
-            logger.error(f"Error in sentiment analysis: {e}")
-            return self._get_default_sentiment()
+            logger.error(f"Error in quality analysis: {e}")
+            return self._get_default_quality()
 
-    def _get_default_sentiment(self) -> Dict:
-        """Return default sentiment values."""
+    def _get_default_quality(self) -> Dict:
+        """Return default quality metric values."""
         return {
-            'sentiment_score': 0.0,
-            'emotion_labels': [],
-            'confidence': 0.0,
-            'aspects': {
-                'satisfaction': 0.0,
-                'urgency': 0.0,
-                'clarity': 0.0
-            }
+            'helpfulness_score': 0.5,
+            'hallucination_risk': 0.5,
+            'factual_grounding_score': 0.5,
+            'unclear_elements': [],
+            'potentially_fabricated_elements': []
         }
 
+    # This maintains backwards compatibility with code still calling analyze_sentiment
+    async def analyze_sentiment(self, message: str) -> Dict:
+        """
+        Legacy method maintained for backwards compatibility.
+        Now redirects to analyze_quality.
+        """
+        logger.warning("analyze_sentiment is deprecated, using analyze_quality instead")
+        quality_data = await self.analyze_quality(message)
+        
+        # Transform quality data to match the expected sentiment structure
+        # This ensures old code expecting sentiment data continues to work
+        return {
+            'sentiment_score': quality_data.get('helpfulness_score', 0.5) * 2 - 1,  # Map 0-1 to -1-1
+            'emotion_labels': [],
+            'confidence': 1.0 - quality_data.get('hallucination_risk', 0.5),
+            'aspects': {
+                'satisfaction': quality_data.get('helpfulness_score', 0.5),
+                'urgency': 0.5,
+                'clarity': quality_data.get('factual_grounding_score', 0.5)
+            }
+        }
+    
     async def detect_intent(self, message: str) -> Tuple[QueryIntent, float]:
         """Detect intent of the message with confidence scoring."""
         try:
@@ -299,22 +349,23 @@ class GeminiLLMManager:
             logger.debug("Preprocessing message")
             processed_message = message
             
-            # Log parallel task creation
-            logger.info("Creating parallel processing tasks")
+            # Detect intent (keep this part as is)
+            logger.info("Creating intent detection task")
             try:
                 intent_task = asyncio.create_task(self.detect_intent(processed_message))
-                sentiment_task = asyncio.create_task(self.analyze_sentiment(processed_message))
+                # Initial quality analysis on query only
+                quality_task = asyncio.create_task(self.analyze_quality(processed_message))
                 
                 # Log task waiting
-                logger.debug("Waiting for intent and sentiment tasks to complete")
-                intent_result, sentiment_data = await asyncio.gather(intent_task, sentiment_task)
+                logger.debug("Waiting for intent and initial quality tasks to complete")
+                intent_result, initial_quality_data = await asyncio.gather(intent_task, quality_task)
             except Exception as task_error:
                 logger.error(f"Error in parallel task processing: {task_error}", exc_info=True)
                 raise
             
-            # Log intent and sentiment results
+            # Log intent and quality results
             logger.info(f"Intent detected: {intent_result[0]} (Confidence: {intent_result[1]})")
-            logger.debug(f"Sentiment analysis result: {sentiment_data}")
+            logger.debug(f"Initial quality analysis result: {initial_quality_data}")
             
             # Unpack intent result
             intent, confidence = intent_result
@@ -374,6 +425,10 @@ class GeminiLLMManager:
                 complete_response = ''.join(response_chunks)
                 logger.info(f"Complete response generated. Total length: {len(complete_response)}")
                 
+                # Now analyze the complete response for quality
+                logger.debug("Analyzing final response quality")
+                quality_data = await self.analyze_quality(processed_message, complete_response)
+                
                 # Yield metadata
                 logger.debug("Preparing and yielding metadata")
                 yield {
@@ -387,7 +442,7 @@ class GeminiLLMManager:
                                 'type': intent.value,
                                 'confidence': confidence
                             },
-                            'sentiment': sentiment_data
+                            'quality': quality_data  # New quality metrics
                         },
                         'error_occurred': False
                     }
@@ -420,7 +475,7 @@ class GeminiLLMManager:
                     'metrics': {
                         'response_time': time.time() - start_time,
                         'intent': {'type': 'error', 'confidence': 0.0},
-                        'sentiment': self._get_default_sentiment()
+                        'quality': self._get_default_quality()  # Use default quality metrics
                     },
                     'error_occurred': True
                 }
