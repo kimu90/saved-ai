@@ -25,11 +25,48 @@ def get_usage_metrics(conn, start_date: datetime, end_date: datetime) -> Dict[st
                     COUNT(CASE WHEN CAST(metrics->>'error_occurred' AS BOOLEAN) THEN 1 END) as error_count,
                     COUNT(CASE WHEN CAST(metrics->>'error_occurred' AS BOOLEAN) THEN 1 END)::float / 
                         NULLIF(COUNT(*), 0) * 100 as error_rate,
-                    AVG(sentiment_score) as avg_sentiment
-                FROM interactions
+                    -- Changed from sentiment_score to a fixed query that doesn't reference i.timestamp
+                    COALESCE(
+                        AVG(sentiment_score),
+                        0.0
+                    ) as avg_quality_score
+                FROM interactions i
                 WHERE timestamp BETWEEN %s AND %s
                 GROUP BY DATE(timestamp)
                 ORDER BY date
+            ),
+            QualityMetrics AS (
+                SELECT 
+                    DATE(cl.timestamp) as date,
+                    AVG(rqm.helpfulness_score) as avg_helpfulness,
+                    AVG(rqm.hallucination_risk) as avg_hallucination_risk,
+                    AVG(rqm.factual_grounding_score) as avg_factual_grounding,
+                    COUNT(*) as quality_evaluations,
+                    COUNT(CASE WHEN rqm.helpfulness_score >= 0.7 THEN 1 END)::float / 
+                        NULLIF(COUNT(*), 0) * 100 as high_quality_ratio
+                FROM chatbot_logs cl
+                JOIN response_quality_metrics rqm ON cl.id = rqm.interaction_id
+                WHERE cl.timestamp BETWEEN %s AND %s
+                GROUP BY DATE(cl.timestamp)
+                ORDER BY date
+            ),
+            -- Use a join to add quality metrics to general usage instead of a correlated subquery
+            CombinedMetrics AS (
+                SELECT 
+                    g.date,
+                    g.total_interactions,
+                    g.unique_users,
+                    g.avg_response_time,
+                    g.error_count,
+                    g.error_rate,
+                    COALESCE(q.avg_helpfulness, g.avg_quality_score) as avg_quality_score,
+                    q.avg_helpfulness,
+                    q.avg_hallucination_risk,
+                    q.avg_factual_grounding,
+                    q.quality_evaluations,
+                    q.high_quality_ratio
+                FROM GeneralUsage g
+                LEFT JOIN QualityMetrics q ON g.date = q.date
             ),
             ChatMetrics AS (
                 SELECT 
@@ -76,18 +113,26 @@ def get_usage_metrics(conn, start_date: datetime, end_date: datetime) -> Dict[st
                 GROUP BY content_type
             )
             SELECT json_build_object(
-                'general_usage', COALESCE((SELECT json_agg(row_to_json(GeneralUsage)) FROM GeneralUsage), '[]'::json),
+                'general_usage', COALESCE((SELECT json_agg(row_to_json(CombinedMetrics)) FROM CombinedMetrics), '[]'::json),
                 'chat_metrics', COALESCE((SELECT json_agg(row_to_json(ChatMetrics)) FROM ChatMetrics), '[]'::json),
                 'search_metrics', COALESCE((SELECT json_agg(row_to_json(SearchMetrics)) FROM SearchMetrics), '[]'::json),
                 'hourly_pattern', COALESCE((SELECT json_agg(row_to_json(HourlyPattern)) FROM HourlyPattern), '[]'::json),
-                'content_matching', COALESCE((SELECT json_agg(row_to_json(ContentMatching)) FROM ContentMatching), '[]'::json)
+                'content_matching', COALESCE((SELECT json_agg(row_to_json(ContentMatching)) FROM ContentMatching), '[]'::json),
+                'quality_metrics', COALESCE((SELECT json_agg(row_to_json(QualityMetrics)) FROM QualityMetrics), '[]'::json)
             ) as metrics;
-        """, (start_date, end_date) * 5)
+        """, (
+            start_date, end_date,  # For GeneralUsage
+            start_date, end_date,  # For QualityMetrics
+            start_date, end_date,  # For ChatMetrics
+            start_date, end_date,  # For SearchMetrics
+            start_date, end_date,  # For HourlyPattern
+            start_date, end_date   # For ContentMatching
+        ))
         
         result = cursor.fetchone()[0]
         
         metrics = {}
-        for key in ['general_usage', 'chat_metrics', 'search_metrics', 'hourly_pattern', 'content_matching']:
+        for key in ['general_usage', 'chat_metrics', 'search_metrics', 'hourly_pattern', 'content_matching', 'quality_metrics']:
             try:
                 df = pd.DataFrame(result.get(key, []))
                 if not df.empty and 'date' in df.columns:
@@ -112,6 +157,7 @@ def display_usage_analytics(metrics: Dict[str, pd.DataFrame], filters: Optional[
         search_data = metrics.get('search_metrics', pd.DataFrame())
         hourly_data = metrics.get('hourly_pattern', pd.DataFrame())
         content_data = metrics.get('content_matching', pd.DataFrame())
+        quality_data = metrics.get('quality_metrics', pd.DataFrame())
         
         if general_data.empty:
             st.warning("No usage data available for the selected period")
@@ -133,8 +179,9 @@ def display_usage_analytics(metrics: Dict[str, pd.DataFrame], filters: Optional[
             st.metric("Avg Response Time", f"{avg_response:.2f}s")
             
         with col4:
-            avg_sentiment = general_data['avg_sentiment'].mean()
-            st.metric("Avg Sentiment", f"{avg_sentiment:.2f}")
+            # Changed from avg_sentiment to avg_quality_score
+            avg_quality = general_data['avg_quality_score'].mean()
+            st.metric("Avg Quality Score", f"{avg_quality:.2f}")
 
         # Usage Trends
         st.subheader("Usage Analytics")
@@ -146,7 +193,7 @@ def display_usage_analytics(metrics: Dict[str, pd.DataFrame], filters: Optional[
                 "Response Time Trends",
                 "Error Rate Trend",
                 "Hourly Usage Pattern",
-                "Content Type Distribution"
+                "Response Quality Metrics"  # Changed from Content Type Distribution
             ),
             vertical_spacing=0.15,
             row_heights=[0.4, 0.3, 0.3]
@@ -226,13 +273,23 @@ def display_usage_analytics(metrics: Dict[str, pd.DataFrame], filters: Optional[
                 row=3, col=1
             )
         
-        # Content Distribution
-        if not content_data.empty:
+        # Response Quality Metrics (replacing Content Distribution)
+        if not quality_data.empty:
             fig.add_trace(
-                go.Bar(
-                    x=content_data['content_type'],
-                    y=content_data['match_count'],
-                    name='Content Matches'
+                go.Scatter(
+                    x=quality_data['date'],
+                    y=quality_data['avg_helpfulness'],
+                    name='Helpfulness',
+                    mode='lines'
+                ),
+                row=3, col=2
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=quality_data['date'],
+                    y=quality_data['avg_hallucination_risk'],
+                    name='Hallucination Risk',
+                    mode='lines'
                 ),
                 row=3, col=2
             )
@@ -253,7 +310,7 @@ def display_usage_analytics(metrics: Dict[str, pd.DataFrame], filters: Optional[
         
         # Detailed Metrics Tables
         with st.expander("View Detailed Metrics"):
-            tabs = st.tabs(["General", "Chat", "Search", "Content"])
+            tabs = st.tabs(["General", "Chat", "Search", "Content", "Quality"])  # Added Quality tab
             
             with tabs[0]:
                 if not general_data.empty:
@@ -261,7 +318,7 @@ def display_usage_analytics(metrics: Dict[str, pd.DataFrame], filters: Optional[
                         general_data.style.format({
                             'avg_response_time': '{:.2f}s',
                             'error_rate': '{:.1f}%',
-                            'avg_sentiment': '{:.2f}'
+                            'avg_quality_score': '{:.2f}'  # Changed from avg_sentiment
                         })
                     )
             
@@ -288,6 +345,28 @@ def display_usage_analytics(metrics: Dict[str, pd.DataFrame], filters: Optional[
                             'avg_similarity': '{:.2f}'
                         })
                     )
+            
+            # New Quality Metrics Tab
+            with tabs[4]:
+                if not quality_data.empty:
+                    st.dataframe(
+                        quality_data.style.format({
+                            'avg_helpfulness': '{:.2f}',
+                            'avg_hallucination_risk': '{:.2f}',
+                            'avg_factual_grounding': '{:.2f}',
+                            'high_quality_ratio': '{:.1f}%'
+                        })
+                    )
+                    
+                    # Add a quality distribution chart
+                    st.subheader("Response Quality Distribution")
+                    quality_fig = go.Figure()
+                    quality_fig.add_trace(go.Bar(
+                        x=quality_data['date'],
+                        y=quality_data['high_quality_ratio'],
+                        name='High Quality Responses (%)'
+                    ))
+                    st.plotly_chart(quality_fig)
                     
     except Exception as e:
         logger.error(f"Error displaying usage analytics: {str(e)}")
