@@ -19,7 +19,7 @@
 				"docker-build"
 			],
 			"python": {
-				"file": "ai-services/ai_services_api/main.py"
+				"file": "ai-services/setup.py"
 			}
 		}
 	]
